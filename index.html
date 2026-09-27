@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>BosINT v3.0-PRO - Advanced OSINT Intelligence Platform</title>
+    <title>BosINT v4.0-PRO - Advanced OSINT Intelligence Platform</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -146,6 +146,17 @@
             border-bottom: 2px solid var(--accent-primary);
         }
 
+        .platform-card {
+            background-color: var(--bg-main);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.85rem;
+        }
+
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -170,7 +181,7 @@
             <div>
                 <div class="d-flex align-items-center gap-2">
                     <h1 class="h5 m-0 fw-bold">BosINT</h1>
-                    <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50" style="font-size: 0.65rem;">v3.0-PRO</span>
+                    <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50" style="font-size: 0.65rem;">v4.0-PRO</span>
                 </div>
                 <small class="text-muted" style="font-size: 0.75rem;">Advanced OSINT Intelligence Suite</small>
             </div>
@@ -195,14 +206,17 @@
             <!-- Sol Panel -->
             <div class="col-lg-4 d-flex flex-column gap-4">
                 
-                <!-- Sekmeler (IP / DNS) -->
+                <!-- Sekmeler (IP / DNS / Username) -->
                 <div class="card-custom p-3">
                     <ul class="nav nav-tabs mb-3 border-bottom border-secondary border-opacity-25" id="queryTabs" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="ip-tab" data-bs-toggle="tab" data-bs-target="#ipPane" type="button"><i class="fa-solid fa-network-wired me-1"></i> IP Lookup</button>
+                            <button class="nav-link active" id="ip-tab" data-bs-toggle="tab" data-bs-target="#ipPane" type="button"><i class="fa-solid fa-network-wired me-1"></i> IP</button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="dns-tab" data-bs-toggle="tab" data-bs-target="#dnsPane" type="button"><i class="fa-solid fa-globe me-1"></i> Domain / DNS</button>
+                            <button class="nav-link" id="dns-tab" data-bs-toggle="tab" data-bs-target="#dnsPane" type="button"><i class="fa-solid fa-globe me-1"></i> Domain</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="user-tab" data-bs-toggle="tab" data-bs-target="#userPane" type="button"><i class="fa-solid fa-user-secret me-1"></i> Username</button>
                         </li>
                     </ul>
 
@@ -230,6 +244,18 @@
                                 <i class="fa-solid fa-magnifying-glass-chart"></i> Resolve DNS
                             </button>
                         </div>
+
+                        <!-- Username Sekmesi -->
+                        <div class="tab-pane fade" id="userPane" role="tabpanel">
+                            <label class="label-title mb-2">Target Username</label>
+                            <div class="input-group mb-3">
+                                <input type="text" id="userInput" class="form-control" placeholder="e.g. PROGUNEY9427" autocomplete="off">
+                                <button class="btn btn-outline-secondary border-secondary" type="button" onclick="pasteClipboard('userInput')"><i class="fa-solid fa-paste"></i></button>
+                            </div>
+                            <button class="btn btn-primary-custom w-100 py-2 d-flex align-items-center justify-content-center gap-2" onclick="lookupUsername()">
+                                <i class="fa-solid fa-fingerprint"></i> Search Username
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -241,13 +267,6 @@
                     </div>
                     <div id="historyList" class="overflow-y-auto flex-grow-1 pe-1" style="max-height: 180px;">
                         <div class="text-muted text-center py-4" style="font-size: 0.8rem;">Henüz sorgu geçmişi yok.</div>
-                    </div>
-                </div>
-
-                <div class="card-custom p-3" style="background: rgba(59, 130, 246, 0.03); border-color: rgba(59, 130, 246, 0.2);">
-                    <div class="label-title text-primary mb-1"><i class="fa-solid fa-shield-dog me-1"></i> BosINT Security Engine</div>
-                    <div class="text-muted" style="font-size: 0.75rem; line-height: 1.4;">
-                        Real-time threat feeds, telemetry simulations and DNS enumeration suite.
                     </div>
                 </div>
             </div>
@@ -262,12 +281,12 @@
                         </div>
                         <h4 class="h5 fw-semibold mb-2">Sorgu Bekleniyor</h4>
                         <p class="text-muted mb-4" style="font-size: 0.85rem; max-width: 400px; margin: 0 auto;">
-                            Sol panelden bir IP veya Domain hedefi seçin ya da hızlı test butonlarını kullanın.
+                            Sol panelden IP, Domain veya Username hedefi seçerek tarama başlatabilirsiniz.
                         </p>
                         <div class="d-flex justify-content-center gap-2 flex-wrap">
                             <button class="btn btn-sm btn-outline-secondary font-monospace" style="font-size: 0.75rem;" onclick="quickQueryIP('1.1.1.1')">1.1.1.1</button>
-                            <button class="btn btn-sm btn-outline-secondary font-monospace" style="font-size: 0.75rem;" onclick="quickQueryIP('8.8.8.8')">8.8.8.8</button>
                             <button class="btn btn-sm btn-outline-secondary font-monospace" style="font-size: 0.75rem;" onclick="quickQueryDomain('github.com')">github.com</button>
+                            <button class="btn btn-sm btn-outline-secondary font-monospace" style="font-size: 0.75rem;" onclick="quickQueryUsername('PROGUNEY9427')">PROGUNEY9427</button>
                         </div>
                     </div>
 
@@ -301,7 +320,6 @@
                                 <div class="label-title">ISP / Provider</div>
                                 <div class="info-box" id="resIsp">-</div>
                             </div>
-
                             <div class="col-md-4">
                                 <div class="label-title">Hostname</div>
                                 <div class="info-box" id="resHostname">-</div>
@@ -314,7 +332,6 @@
                                 <div class="label-title">Region</div>
                                 <div class="info-box" id="resRegion">-</div>
                             </div>
-
                             <div class="col-md-4">
                                 <div class="label-title">Country</div>
                                 <div class="info-box" id="resCountry">-</div>
@@ -327,7 +344,6 @@
                                 <div class="label-title">Longitude</div>
                                 <div class="info-box" id="resLon">-</div>
                             </div>
-
                             <div class="col-md-4">
                                 <div class="label-title">Organization</div>
                                 <div class="info-box" id="resOrg">-</div>
@@ -340,9 +356,8 @@
                                 <div class="label-title">Time Zone</div>
                                 <div class="info-box" id="resTimezone">-</div>
                             </div>
-
                             <div class="col-12">
-                                <div class="label-title">Simulated Port Status (21, 22, 80, 443, 3389)</div>
+                                <div class="label-title">Simulated Port Status</div>
                                 <div class="info-box text-success mono" id="resPorts">-</div>
                             </div>
                         </div>
@@ -358,9 +373,22 @@
                         </div>
                         <div class="row g-3">
                             <div class="col-12">
-                                <div class="label-title">Resolved IP & Cloudflare DNS Data</div>
+                                <div class="label-title">Resolved IP & Data</div>
                                 <div class="info-box mono" id="resDnsData" style="white-space: pre-wrap;">-</div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Username Sonuç Ekranı -->
+                    <div id="userResultState" class="d-none">
+                        <div class="d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-25 pb-3 mb-4">
+                            <div>
+                                <span class="label-title">Username Cross-Platform Match</span>
+                                <h3 class="h4 mono fw-bold text-primary m-0" id="resUsernameTitle">-</h3>
+                            </div>
+                        </div>
+                        <div class="row g-3 overflow-y-auto" style="max-height: 380px;" id="userPlatformsList">
+                            <!-- Dinamik Platformlar Buraya Gelecek -->
                         </div>
                     </div>
 
@@ -405,15 +433,23 @@
 
         function quickQueryIP(ip) {
             document.getElementById('ipInput').value = ip;
+            var tab = new bootstrap.Tab(document.getElementById('ip-tab'));
+            tab.show();
             lookupIP();
         }
 
         function quickQueryDomain(domain) {
             document.getElementById('domainInput').value = domain;
-            // Domain sekmesini aktif et
             var tab = new bootstrap.Tab(document.getElementById('dns-tab'));
             tab.show();
             lookupDNS();
+        }
+
+        function quickQueryUsername(username) {
+            document.getElementById('userInput').value = username;
+            var tab = new bootstrap.Tab(document.getElementById('user-tab'));
+            tab.show();
+            lookupUsername();
         }
 
         async function lookupMyIP() {
@@ -443,6 +479,7 @@
                 lastData = data;
                 document.getElementById('welcomeState').classList.add('d-none');
                 document.getElementById('dnsResultState').classList.add('d-none');
+                document.getElementById('userResultState').classList.add('d-none');
                 document.getElementById('resultState').classList.remove('d-none');
 
                 document.getElementById('resIpTitle').innerText = data.ip;
@@ -467,7 +504,6 @@
                 document.getElementById('resOrg').innerText = data.connection?.org || 'Unknown';
                 document.getElementById('resZip').innerText = data.postal || 'N/A';
                 document.getElementById('resTimezone').innerText = data.timezone?.id || 'Unknown';
-
                 document.getElementById('resPorts').innerText = `[Port 21: FILTERED] | [Port 22: OPEN (SSH)] | [Port 80: OPEN (HTTP)] | [Port 443: OPEN (HTTPS)] | [Port 3389: CLOSED]`;
 
                 addToHistory(data.ip);
@@ -481,7 +517,6 @@
             if(!domain) return alert("Lütfen bir domain adı girin!");
 
             try {
-                // Cloudflare DoH (DNS over HTTPS) kullanarak gerçek DNS kaydı çekme
                 let res = await fetch(`https://cloudflare-dns.com/dns-query?name=${domain}&type=A`, {
                     headers: { 'Accept': 'application/dns-json' }
                 });
@@ -489,10 +524,10 @@
 
                 document.getElementById('welcomeState').classList.add('d-none');
                 document.getElementById('resultState').classList.add('d-none');
+                document.getElementById('userResultState').classList.add('d-none');
                 document.getElementById('dnsResultState').classList.remove('d-none');
 
                 document.getElementById('resDomainTitle').innerText = domain;
-                
                 let answers = data.Answer ? data.Answer.map(a => `Name: ${a.name}\nType: ${a.type}\nTTL: ${a.TTL}\nIP/Data: ${a.data}\n-------------------`).join('\n') : "Kayıt bulunamadı.";
                 document.getElementById('resDnsData').innerText = answers;
 
@@ -500,6 +535,54 @@
             } catch (err) {
                 alert("DNS sorgulama hatası.");
             }
+        }
+
+        function lookupUsername() {
+            let username = document.getElementById('userInput').value.trim();
+            if(!username) return alert("Lütfen bir kullanıcı adı girin!");
+
+            document.getElementById('welcomeState').classList.add('d-none');
+            document.getElementById('resultState').classList.add('d-none');
+            document.getElementById('dnsResultState').classList.add('d-none');
+            document.getElementById('userResultState').classList.remove('d-none');
+
+            document.getElementById('resUsernameTitle').innerText = username;
+
+            // Popüler platformlar listesi
+            const platforms = [
+                { name: "GitHub", icon: "fa-brands fa-github", url: `https://github.com/${username}` },
+                { name: "Twitter / X", icon: "fa-brands fa-twitter", url: `https://twitter.com/${username}` },
+                { name: "Instagram", icon: "fa-brands fa-instagram", url: `https://instagram.com/${username}` },
+                { name: "TikTok", icon: "fa-brands fa-tiktok", url: `https://tiktok.com/@${username}` },
+                { name: "Reddit", icon: "fa-brands fa-reddit", url: `https://reddit.com/user/${username}` },
+                { name: "Telegram", icon: "fa-brands fa-telegram", url: `https://t.me/${username}` },
+                { name: "Steam Community", icon: "fa-brands fa-steam", url: `https://steamcommunity.com/id/${username}` },
+                { name: "Pinterest", icon: "fa-brands fa-pinterest", url: `https://pinterest.com/${username}` },
+                { name: "SoundCloud", icon: "fa-brands fa-soundcloud", url: `https://soundcloud.com/${username}` },
+                { name: "Twitch", icon: "fa-brands fa-twitch", url: `https://twitch.tv/${username}` },
+                { name: "LinkedIn", icon: "fa-brands fa-linkedin", url: `https://linkedin.com/in/${username}` },
+                { name: "Medium", icon: "fa-brands fa-medium", url: `https://medium.com/@${username}` }
+            ];
+
+            let html = '';
+            platforms.forEach(p => {
+                html += `
+                    <div class="col-md-6">
+                        <div class="platform-card">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="${p.icon} text-primary fa-lg" style="width: 20px;"></i>
+                                <span class="fw-semibold">${p.name}</span>
+                            </div>
+                            <a href="${p.url}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.75rem;">
+                                Profili Aç <i class="fa-solid fa-arrow-up-right-from-square ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('userPlatformsList').innerHTML = html;
+            addToHistory(username);
         }
 
         function addToHistory(item) {
@@ -511,7 +594,7 @@
             let listHTML = '';
             searchHistory.forEach(val => {
                 let isIp = isValidIP(val);
-                let func = isIp ? `quickQueryIP('${val}')` : `quickQueryDomain('${val}')`;
+                let func = isIp ? `quickQueryIP('${val}')` : (val.includes('.') && !val.includes(' ') ? `quickQueryDomain('${val}')` : `quickQueryUsername('${val}')`);
                 listHTML += `<div class="history-item mono d-flex justify-content-between align-items-center" onclick="${func}">
                     <span><i class="fa-solid fa-angle-right text-primary me-2" style="font-size:10px;"></i>${val}</span>
                     <i class="fa-solid fa-arrow-up-right-from-square text-muted" style="font-size:10px;"></i>
