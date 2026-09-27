@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+    <title>BosINT IP Address Report</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+      body {
+         background-color: #1e1e2f;
+         color: #fff;
+         font-family: 'Roboto', sans-serif;
+         padding: 30px;
+      }
+      .card-container {
+         background-color: #2b2d42;
+         border-radius: 0.5rem;
+         padding: 25px;
+         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+         max-width: 900px;
+         margin: auto;
+      }
+      .info-box {
+         background-color: #1f202e;
+         border: 1px solid #3f3f5c;
+         border-radius: 6px;
+         padding: 10px 15px;
+         font-family: monospace;
+         color: #dcdcdc;
+         margin-top: 5px;
+         min-height: 45px;
+         word-break: break-all;
+      }
+      .label-title {
+         font-size: 0.85rem;
+         font-weight: bold;
+         color: #b8b8d0;
+         margin-bottom: 2px;
+      }
+      .search-box {
+         margin-bottom: 25px;
+      }
+    </style>
+</head>
+<body>
+
+<div class="card-container">
+    <h3 id="main-title" class="mb-4">BosINT IP Address Lookup</h3>
+    
+    <div class="search-box input-group">
+        <input type="text" id="ipInput" class="form-control" placeholder="IP Adresi Girin (Örn: 176.232.13.175)">
+        <button class="btn btn-primary" onclick="lookupIP()">Sorgula</button>
+    </div>
+
+    <div class="row g-3" id="resultArea">
+        <div class="col-md-4">
+            <div class="label-title">IP Type</div>
+            <div class="info-box" id="ipType">IPv4</div>
+        </div>
+        <div class="col-md-4">
+            <div class="label-title">Subnet</div>
+            <div class="info-box" id="subnet">-</div>
+        </div>
+        <div class="col-md-4">
+            <div class="label-title">ISP</div>
+            <div class="info-box" id="isp">-</div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="label-title">Hostname</div>
+            <div class="info-box" id="hostname">Unknown</div>
+        </div>
+        <div class="col-md-4">
+            <div class="label-title">City</div>
+            <div class="info-box" id="city">-</div>
+        </div>
+        <div class="col-md-4">
+            <div class="label-title">Region</div>
+            <div class="info-box" id="region">-</div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="label-title">Country</div>
+            <div class="info-box" id="country">-</div>
+        </div>
+        <div class="col-md-4">
+            <div class="label-title">Latitude</div>
+            <div class="info-box" id="lat">-</div>
+        </div>
+        <div class="col-md-4">
+            <div class="label-title">Longitude</div>
+            <div class="info-box" id="lon">-</div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="label-title">Organization</div>
+            <div class="info-box" id="org">-</div>
+        </div>
+        <div class="col-md-4">
+            <div class="label-title">Postal/Zip Code</div>
+            <div class="info-box" id="zip">-</div>
+        </div>
+        <div class="col-md-4">
+            <div class="label-title">Time Zone</div>
+            <div class="info-box" id="timezone">-</div>
+        </div>
+
+        <div class="col-12">
+            <div class="label-title">Shodan (Status, IP, Hostnames, Ports, CPEs, Vulns, Tags)</div>
+            <div class="info-box" id="shodan">-</div>
+        </div>
+    </div>
+    
+    <div class="mt-4 text-muted text-center" style="font-size: 0.8rem;">
+        For advanced details (including blacklist status), consider subscribing to BosINT Pro.
+    </div>
+</div>
+
+<script>
+function isValidIP(ip) {
+    const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
+    return ipv4Regex.test(ip);
+}
+
+async function lookupIP() {
+    let ip = document.getElementById('ipInput').value.trim();
+    if(!ip) return alert("Lütfen bir IP adresi girin!");
+    
+    if(!isValidIP(ip)) {
+        return alert("Geçersiz IP adresi formatı!");
+    }
+    
+    try {
+        let response = await fetch(`https://ipwho.is/${ip}`);
+        let data = await response.json();
+        
+        if(!data.success) {
+            alert("IP sorgulanamadı: " + (data.message || "Bilinmeyen hata"));
+            return;
+        }
+
+        document.getElementById('main-title').innerText = `IP Address: ${data.ip}`;
+        document.getElementById('ipType').innerText = data.type || 'IPv4';
+        
+        let subnetParts = data.ip.split('.');
+        subnetParts[3] = '0';
+        document.getElementById('subnet').innerText = `${subnetParts.join('.')}/24`;
+        
+        document.getElementById('isp').innerText = data.connection?.isp || 'Unknown';
+        document.getElementById('hostname').innerText = data.connection?.domain || 'Unknown';
+        document.getElementById('city').innerText = data.city || 'Unknown';
+        document.getElementById('region').innerText = data.region || 'Unknown';
+        document.getElementById('country').innerText = data.country_code || 'Unknown';
+        document.getElementById('lat').innerText = data.latitude || '0';
+        document.getElementById('lon').innerText = data.longitude || '0';
+        document.getElementById('org').innerText = data.connection?.org || 'Unknown';
+        document.getElementById('zip').innerText = data.postal || 'N/A';
+        document.getElementById('timezone').innerText = data.timezone?.id || 'Unknown';
+        
+        // Shodan simülasyon çıktısı (Gerçek entegrasyon için backend şarttır)
+        document.getElementById('shodan').innerText = `200,${data.ip},[${data.connection?.domain || ''}],[80, 443],[],[],[]`;
+        
+    } catch (err) {
+        alert("Bağlantı hatası: " + err);
+    }
+}
+</script>
+
+</body>
+</html>
