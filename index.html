@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>BosINT v4.0-PRO - Advanced OSINT Intelligence Platform</title>
+    <title>BosINT v4.1-PRO - Advanced OSINT Intelligence Platform</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -146,15 +146,13 @@
             border-bottom: 2px solid var(--accent-primary);
         }
 
-        .platform-card {
+        .osint-grid-card {
             background-color: var(--bg-main);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 10px 14px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            padding: 14px;
             font-size: 0.85rem;
+            height: 100%;
         }
 
         ::-webkit-scrollbar {
@@ -181,14 +179,14 @@
             <div>
                 <div class="d-flex align-items-center gap-2">
                     <h1 class="h5 m-0 fw-bold">BosINT</h1>
-                    <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50" style="font-size: 0.65rem;">v4.0-PRO</span>
+                    <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50" style="font-size: 0.65rem;">v4.1-PRO</span>
                 </div>
                 <small class="text-muted" style="font-size: 0.75rem;">Advanced OSINT Intelligence Suite</small>
             </div>
         </div>
         <div class="d-flex align-items-center gap-3">
             <div class="d-none d-md-flex align-items-center gap-2 badge-status">
-                <i class="fa-solid fa-circle fa-2xs" style="font-size: 6px;"></i> System Online • API Secure
+                <i class="fa-solid fa-circle fa-2xs" style="font-size: 6px;"></i> System Online • Sherlock Bridge Active
             </div>
             <button class="btn btn-sm btn-outline-secondary border-secondary text-light d-flex align-items-center gap-2" onclick="toggleTheme()" title="Tema Değiştir">
                 <i class="fa-solid fa-circle-half-stroke text-primary" id="themeIcon"></i>
@@ -206,7 +204,7 @@
             <!-- Sol Panel -->
             <div class="col-lg-4 d-flex flex-column gap-4">
                 
-                <!-- Sekmeler (IP / DNS / Username) -->
+                <!-- Sekmeler -->
                 <div class="card-custom p-3">
                     <ul class="nav nav-tabs mb-3 border-bottom border-secondary border-opacity-25" id="queryTabs" role="tablist">
                         <li class="nav-item" role="presentation">
@@ -247,13 +245,13 @@
 
                         <!-- Username Sekmesi -->
                         <div class="tab-pane fade" id="userPane" role="tabpanel">
-                            <label class="label-title mb-2">Target Username</label>
+                            <label class="label-title mb-2">Target Username (Sherlock Bridge)</label>
                             <div class="input-group mb-3">
-                                <input type="text" id="userInput" class="form-control" placeholder="e.g. PROGUNEY9427" autocomplete="off">
+                                <input type="text" id="userInput" class="form-control" placeholder="e.g. emocxn" autocomplete="off">
                                 <button class="btn btn-outline-secondary border-secondary" type="button" onclick="pasteClipboard('userInput')"><i class="fa-solid fa-paste"></i></button>
                             </div>
                             <button class="btn btn-primary-custom w-100 py-2 d-flex align-items-center justify-content-center gap-2" onclick="lookupUsername()">
-                                <i class="fa-solid fa-fingerprint"></i> Search Username
+                                <i class="fa-solid fa-fingerprint"></i> Run Sherlock Scan
                             </button>
                         </div>
                     </div>
@@ -286,7 +284,7 @@
                         <div class="d-flex justify-content-center gap-2 flex-wrap">
                             <button class="btn btn-sm btn-outline-secondary font-monospace" style="font-size: 0.75rem;" onclick="quickQueryIP('1.1.1.1')">1.1.1.1</button>
                             <button class="btn btn-sm btn-outline-secondary font-monospace" style="font-size: 0.75rem;" onclick="quickQueryDomain('github.com')">github.com</button>
-                            <button class="btn btn-sm btn-outline-secondary font-monospace" style="font-size: 0.75rem;" onclick="quickQueryUsername('PROGUNEY9427')">PROGUNEY9427</button>
+                            <button class="btn btn-sm btn-outline-secondary font-monospace" style="font-size: 0.75rem;" onclick="quickQueryUsername('emocxn')">emocxn</button>
                         </div>
                     </div>
 
@@ -379,21 +377,23 @@
                         </div>
                     </div>
 
-                    <!-- Username Sonuç Ekranı -->
+                    <!-- Username Sonuç Ekranı (Gerçek Sherlock Verileri) -->
                     <div id="userResultState" class="d-none">
-                        <div class="d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-25 pb-3 mb-4">
+                        <div class="d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-25 pb-3 mb-3">
                             <div>
-                                <span class="label-title">Username Cross-Platform Match</span>
+                                <span class="label-title">Sherlock Real-Time Scan Results</span>
                                 <h3 class="h4 mono fw-bold text-primary m-0" id="resUsernameTitle">-</h3>
                             </div>
+                            <div class="text-muted" style="font-size: 0.75rem;" id="resScanMeta">Scanning via Local Python Bridge...</div>
                         </div>
-                        <div class="row g-3 overflow-y-auto" style="max-height: 380px;" id="userPlatformsList">
-                            <!-- Dinamik Platformlar Buraya Gelecek -->
+
+                        <div class="overflow-y-auto pe-2" style="max-height: 420px;" id="userDashboardGrid">
+                            <div class="text-center text-muted py-5">Tarama yapılıyor, lütfen bekleyin...</div>
                         </div>
                     </div>
 
                     <div class="text-center text-muted border-top border-secondary border-opacity-25 pt-3 mt-auto" style="font-size: 0.75rem;">
-                        BosINT OSINT Platform • Powered by Advanced Threat Intelligence & GeoIP API
+                        BosINT OSINT Platform • Powered by Python Sherlock Bridge
                     </div>
 
                 </div>
@@ -537,7 +537,7 @@
             }
         }
 
-        function lookupUsername() {
+        async function lookupUsername() {
             let username = document.getElementById('userInput').value.trim();
             if(!username) return alert("Lütfen bir kullanıcı adı girin!");
 
@@ -547,42 +547,52 @@
             document.getElementById('userResultState').classList.remove('d-none');
 
             document.getElementById('resUsernameTitle').innerText = username;
+            document.getElementById('resScanMeta').innerText = "Scanning via Local Python Bridge...";
+            document.getElementById('userDashboardGrid').innerHTML = `<div class="text-center text-muted py-5"><i class="fa-solid fa-spinner fa-spin fa-2x mb-2"></i><br>Sherlock taranıyor, bu işlem birkaç saniye sürebilir...</div>`;
 
-            // Popüler platformlar listesi
-            const platforms = [
-                { name: "GitHub", icon: "fa-brands fa-github", url: `https://github.com/${username}` },
-                { name: "Twitter / X", icon: "fa-brands fa-twitter", url: `https://twitter.com/${username}` },
-                { name: "Instagram", icon: "fa-brands fa-instagram", url: `https://instagram.com/${username}` },
-                { name: "TikTok", icon: "fa-brands fa-tiktok", url: `https://tiktok.com/@${username}` },
-                { name: "Reddit", icon: "fa-brands fa-reddit", url: `https://reddit.com/user/${username}` },
-                { name: "Telegram", icon: "fa-brands fa-telegram", url: `https://t.me/${username}` },
-                { name: "Steam Community", icon: "fa-brands fa-steam", url: `https://steamcommunity.com/id/${username}` },
-                { name: "Pinterest", icon: "fa-brands fa-pinterest", url: `https://pinterest.com/${username}` },
-                { name: "SoundCloud", icon: "fa-brands fa-soundcloud", url: `https://soundcloud.com/${username}` },
-                { name: "Twitch", icon: "fa-brands fa-twitch", url: `https://twitch.tv/${username}` },
-                { name: "LinkedIn", icon: "fa-brands fa-linkedin", url: `https://linkedin.com/in/${username}` },
-                { name: "Medium", icon: "fa-brands fa-medium", url: `https://medium.com/@${username}` }
-            ];
+            try {
+                let response = await fetch(`http://localhost:5000/search?username=${encodeURIComponent(username)}`);
+                let data = await response.json();
 
-            let html = '';
-            platforms.forEach(p => {
-                html += `
-                    <div class="col-md-6">
-                        <div class="platform-card">
-                            <div class="d-flex align-items-center gap-2">
-                                <i class="${p.icon} text-primary fa-lg" style="width: 20px;"></i>
-                                <span class="fw-semibold">${p.name}</span>
+                if(data.error) {
+                    document.getElementById('userDashboardGrid').innerHTML = `<div class="text-danger text-center py-4">${data.error}</div>`;
+                    return;
+                }
+
+                let sites = data.found_sites;
+                let keys = Object.keys(sites);
+
+                if(keys.length === 0) {
+                    document.getElementById('userDashboardGrid').innerHTML = `<div class="text-muted text-center py-4">Bu kullanıcı adına ait eşleşen hesap bulunamadı.</div>`;
+                    document.getElementById('resScanMeta').innerText = `0 profiles found`;
+                    return;
+                }
+
+                let gridHtml = '<div class="row g-3">';
+                for(let site of keys) {
+                    let url = sites[site];
+                    gridHtml += `
+                        <div class="col-md-6">
+                            <div class="osint-grid-card d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="label-title text-primary"><i class="fa-solid fa-globe me-1"></i> ${site.toUpperCase()}</div>
+                                    <div class="fw-bold mono text-truncate" style="max-width: 250px;">${username}</div>
+                                    <small class="text-muted text-truncate d-block" style="max-width: 250px;">${url}</small>
+                                </div>
+                                <a href="${url}" target="_blank" class="btn btn-sm btn-outline-primary py-1 px-2" style="font-size: 0.75rem;">Open</a>
                             </div>
-                            <a href="${p.url}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.75rem;">
-                                Profili Aç <i class="fa-solid fa-arrow-up-right-from-square ms-1"></i>
-                            </a>
                         </div>
-                    </div>
-                `;
-            });
+                    `;
+                }
+                gridHtml += '</div>';
 
-            document.getElementById('userPlatformsList').innerHTML = html;
-            addToHistory(username);
+                document.getElementById('userDashboardGrid').innerHTML = gridHtml;
+                document.getElementById('resScanMeta').innerText = `${keys.length} profiles found via Sherlock`;
+                addToHistory(username);
+
+            } catch (err) {
+                document.getElementById('userDashboardGrid').innerHTML = `<div class="text-danger text-center py-4">Python sunucusuna bağlanılamadı! Lütfen konsoldan 'python app.py' komutunu çalıştırdığınızdan emin olun.</div>`;
+            }
         }
 
         function addToHistory(item) {
