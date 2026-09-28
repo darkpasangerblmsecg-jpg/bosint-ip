@@ -1,0 +1,24 @@
+{
+  "sites": [
+    {"name": "GitHub", "uri_check": "https://github.com/{account}"},
+    {"name": "Twitter", "uri_check": "https://twitter.com/{account}"},
+    {"name": "X", "uri_check": "https://x.com/{account}"},
+    {"name": "Instagram", "uri_check": "https://instagram.com/{account}"},
+    {"name": "Reddit", "uri_check": "https://www.reddit.com/user/{account}"},
+    {"name": "TikTok", "uri_check": "https://www.tiktok.com/@{account}"},
+    {"name": "YouTube", "uri_check": "https://www.youtube.com/@{account}"},
+    {"name": "Steam", "uri_check": "https://steamcommunity.com/id/{account}"},
+    {"name": "Telegram", "uri_check": "https://t.me/{account}"},
+    {"name": "Medium", "uri_check": "https://medium.com/@{account}"},
+    {"name": "Pinterest", "uri_check": "https://www.pinterest.com/{account}/"},
+    {"name": "SoundCloud", "uri_check": "https://soundcloud.com/{account}"},
+    {"name": "Twitch", "uri_check": "https://www.twitch.tv/{account}"},
+    {"name": "Spotify", "uri_check": "https://open.spotify.com/user/{account}"},
+    {"name": "Discord", "uri_check": "https://discord.com/users/{account}"},
+    {"name": "Facebook", "uri_check": "https://www.facebook.com/{account}"},
+    {"name": "Snapchat", "uri_check": "https://www.snapchat.com/add/{account}"},
+    {"name": "Kick", "uri_check": "https://kick.com/{account}"},
+    {"name": "Patreon", "uri_check": "https://www.patreon.com/{account}"},
+    {"name": "Substack", "uri_check": "https://{account}.substack.com"}
+  ]
+}
