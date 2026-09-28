@@ -1,639 +1,231 @@
 <!DOCTYPE html>
-<html lang="tr" class="dark" id="htmlRoot">
+<html lang="tr" data-bs-theme="dark">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>BosINT v4.1-PRO - Advanced OSINT Intelligence Platform</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BosINT v4.1-PRO // Advanced OSINT Suite</title>
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: JetBrains Mono & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-main: #0b0f19;
-            --bg-card: #111827;
-            --bg-input: #1f2937;
-            --border-color: #374151;
-            --accent-primary: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.2);
-            --text-main: #f9fafb;
-            --text-muted: #9ca3af;
-            --success: #10b981;
+            --bs-body-font-family: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
         }
-
-        html.light {
-            --bg-main: #f3f4f6;
-            --bg-card: #ffffff;
-            --bg-input: #e5e7eb;
-            --border-color: #d1d5db;
-            --accent-primary: #2563eb;
-            --accent-glow: rgba(37, 99, 235, 0.15);
-            --text-main: #111827;
-            --text-muted: #6b7280;
-            --success: #059669;
-        }
-
         body {
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            font-family: 'Inter', sans-serif;
+            font-family: var(--bs-body-font-family);
+            background-color: var(--bs-tertiary-bg);
+            color: var(--bs-body-color);
+            transition: background-color 0.3s ease;
+        }
+        .font-mono {
+            font-family: var(--font-mono);
+        }
+        .sidebar {
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
-            background-size: 24px 24px;
-            transition: background-color 0.3s, color 0.3s;
+            background-color: var(--bs-body-bg);
+            border-right: 1px solid var(--bs-border-color);
         }
-
-        .mono {
-            font-family: 'JetBrains Mono', monospace;
+        .card {
+            border: 1px solid var(--bs-border-color);
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
         }
-
-        .navbar-custom {
-            background-color: var(--bg-card);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--border-color);
-            padding: 12px 24px;
+        .terminal-box {
+            background-color: #0b0f19;
+            color: #38ef7d;
+            font-family: var(--font-mono);
+            border-radius: 6px;
+            padding: 15px;
+            min-height: 180px;
+            max-height: 250px;
+            overflow-y: auto;
         }
-
-        .card-custom {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-
-        .form-control, .form-select {
-            background-color: var(--bg-input);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9rem;
-        }
-
-        .form-control:focus {
-            background-color: var(--bg-input);
-            color: var(--text-main);
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 0 3px var(--accent-glow);
-        }
-
-        .btn-primary-custom {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-            border: none;
-            color: white;
-            font-weight: 600;
-            transition: all 0.2s ease;
-        }
-
-        .btn-primary-custom:hover {
-            opacity: 0.9;
-            box-shadow: 0 0 15px var(--accent-glow);
-            color: white;
-        }
-
-        .info-box {
-            background-color: var(--bg-main);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 12px 16px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: var(--text-main);
-            word-break: break-all;
-            position: relative;
-        }
-
-        .label-title {
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-muted);
-            margin-bottom: 4px;
-        }
-
-        .badge-status {
-            background-color: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            font-size: 0.75rem;
-            padding: 4px 10px;
-            border-radius: 20px;
-        }
-
-        .history-item {
-            padding: 8px 12px;
-            border-bottom: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: background 0.15s;
-            font-size: 0.85rem;
-        }
-
-        .history-item:hover {
-            background-color: var(--accent-glow);
-        }
-
-        .nav-tabs .nav-link {
-            color: var(--text-muted);
-            border: none;
-            font-weight: 600;
-            font-size: 0.85rem;
-        }
-
-        .nav-tabs .nav-link.active {
-            color: var(--accent-primary);
-            background: transparent;
-            border-bottom: 2px solid var(--accent-primary);
-        }
-
-        .osint-grid-card {
-            background-color: var(--bg-main);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 14px;
-            font-size: 0.85rem;
-            height: 100%;
-        }
-
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: var(--bg-main);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 3px;
+        .render-card {
+            background: linear-gradient(135deg, rgba(13, 110, 253, 0.05), rgba(25, 135, 84, 0.05));
+            border-left: 4px solid #0d6efd;
         }
     </style>
 </head>
 <body>
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-custom d-flex justify-content-between align-items-center mb-4">
-        <div class="d-flex align-items-center gap-3">
-            <div class="bg-primary bg-opacity-10 p-2 rounded-3 border border-primary border-opacity-25 text-primary">
-                <i class="fa-solid fa-shield-halved fa-lg"></i>
-            </div>
-            <div>
-                <div class="d-flex align-items-center gap-2">
-                    <h1 class="h5 m-0 fw-bold">BosINT</h1>
-                    <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50" style="font-size: 0.65rem;">v4.1-PRO</span>
-                </div>
-                <small class="text-muted" style="font-size: 0.75rem;">Advanced OSINT Intelligence Suite</small>
-            </div>
-        </div>
-        <div class="d-flex align-items-center gap-3">
-            <div class="d-none d-md-flex align-items-center gap-2 badge-status">
-                <i class="fa-solid fa-circle fa-2xs" style="font-size: 6px;"></i> System Online • Sherlock Bridge Active
-            </div>
-            <button class="btn btn-sm btn-outline-secondary border-secondary text-light d-flex align-items-center gap-2" onclick="toggleTheme()" title="Tema Değiştir">
-                <i class="fa-solid fa-circle-half-stroke text-primary" id="themeIcon"></i>
-            </button>
-            <button class="btn btn-sm btn-outline-secondary border-secondary text-light d-flex align-items-center gap-2" onclick="lookupMyIP()">
-                <i class="fa-solid fa-crosshairs text-primary"></i> My IP Lookup
-            </button>
-        </div>
-    </nav>
-
-    <!-- Main Container -->
-    <div class="container-fluid px-4 flex-grow-1 pb-4">
-        <div class="row g-4 h-100">
-            
-            <!-- Sol Panel -->
-            <div class="col-lg-4 d-flex flex-column gap-4">
-                
-                <!-- Sekmeler -->
-                <div class="card-custom p-3">
-                    <ul class="nav nav-tabs mb-3 border-bottom border-secondary border-opacity-25" id="queryTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="ip-tab" data-bs-toggle="tab" data-bs-target="#ipPane" type="button"><i class="fa-solid fa-network-wired me-1"></i> IP</button>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar collapse p-3">
+                <div class="position-sticky">
+                    <div class="d-flex align-items-center mb-4 px-2">
+                        <i class="fa-solid fa-terminal text-primary fs-3 me-2"></i>
+                        <div>
+                            <h5 class="m-0 fw-bold font-mono">BosINT</h5>
+                            <small class="text-muted">v4.1-PRO Core</small>
+                        </div>
+                    </div>
+                    <ul class="nav flex-column gap-1">
+                        <li class="nav-item">
+                            <a class="nav-link active rounded bg-primary text-white" href="#ip-section"><i class="fa-solid fa-network-wired me-2"></i> IP İstihbaratı</a>
                         </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="dns-tab" data-bs-toggle="tab" data-bs-target="#dnsPane" type="button"><i class="fa-solid fa-globe me-1"></i> Domain</button>
+                        <li class="nav-item">
+                            <a class="nav-link rounded text-secondary" href="#dns-section"><i class="fa-solid fa-globe me-2"></i> Domain / DNS</a>
                         </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="user-tab" data-bs-toggle="tab" data-bs-target="#userPane" type="button"><i class="fa-solid fa-user-secret me-1"></i> Username</button>
+                        <li class="nav-item">
+                            <a class="nav-link rounded text-secondary" href="#osint-section"><i class="fa-solid fa-user-secret me-2"></i> Kullanıcı Taraması</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link rounded text-secondary" href="#render-section"><i class="fa-solid fa-microchip me-2"></i> Render & Sistem</a>
                         </li>
                     </ul>
+                </div>
+            </nav>
 
-                    <div class="tab-content" id="queryTabsContent">
-                        <!-- IP Sekmesi -->
-                        <div class="tab-pane fade show active" id="ipPane" role="tabpanel">
-                            <label class="label-title mb-2">Target IP Query</label>
-                            <div class="input-group mb-3">
-                                <input type="text" id="ipInput" class="form-control" placeholder="e.g. 8.8.8.8" autocomplete="off">
-                                <button class="btn btn-outline-secondary border-secondary" type="button" onclick="pasteClipboard('ipInput')"><i class="fa-solid fa-paste"></i></button>
-                            </div>
-                            <button class="btn btn-primary-custom w-100 py-2 d-flex align-items-center justify-content-center gap-2" onclick="lookupIP()">
-                                <i class="fa-solid fa-bolt"></i> Run IP Scan
-                            </button>
-                        </div>
-
-                        <!-- DNS Sekmesi -->
-                        <div class="tab-pane fade" id="dnsPane" role="tabpanel">
-                            <label class="label-title mb-2">Target Domain</label>
-                            <div class="input-group mb-3">
-                                <input type="text" id="domainInput" class="form-control" placeholder="e.g. google.com" autocomplete="off">
-                                <button class="btn btn-outline-secondary border-secondary" type="button" onclick="pasteClipboard('domainInput')"><i class="fa-solid fa-paste"></i></button>
-                            </div>
-                            <button class="btn btn-primary-custom w-100 py-2 d-flex align-items-center justify-content-center gap-2" onclick="lookupDNS()">
-                                <i class="fa-solid fa-magnifying-glass-chart"></i> Resolve DNS
-                            </button>
-                        </div>
-
-                        <!-- Username Sekmesi -->
-                        <div class="tab-pane fade" id="userPane" role="tabpanel">
-                            <label class="label-title mb-2">Target Username (Sherlock Bridge)</label>
-                            <div class="input-group mb-3">
-                                <input type="text" id="userInput" class="form-control" placeholder="e.g. emocxn" autocomplete="off">
-                                <button class="btn btn-outline-secondary border-secondary" type="button" onclick="pasteClipboard('userInput')"><i class="fa-solid fa-paste"></i></button>
-                            </div>
-                            <button class="btn btn-primary-custom w-100 py-2 d-flex align-items-center justify-content-center gap-2" onclick="lookupUsername()">
-                                <i class="fa-solid fa-fingerprint"></i> Run Sherlock Scan
-                            </button>
-                        </div>
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                
+                <!-- Top Navbar / Controls -->
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+                    <div>
+                        <h2 class="h4 fw-bold m-0 font-mono"><i class="fa-solid fa-shield-halved text-success"></i> INTELLIGENCE DASHBOARD</h2>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle mt-1 font-mono">Status: ACTIVE</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <button id="themeToggle" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                            <i class="fa-solid fa-moon"></i> Tema
+                        </button>
                     </div>
                 </div>
 
-                <!-- Sorgu Geçmişi -->
-                <div class="card-custom p-4 flex-grow-1 d-flex flex-column" style="max-height: 280px;">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <label class="label-title m-0"><i class="fa-solid fa-clock-rotate-left me-1"></i> Query History</label>
-                        <button class="btn btn-link text-muted p-0 text-decoration-none" style="font-size: 0.75rem;" onclick="clearHistory()"><i class="fa-solid fa-trash-can"></i></button>
-                    </div>
-                    <div id="historyList" class="overflow-y-auto flex-grow-1 pe-1" style="max-height: 180px;">
-                        <div class="text-muted text-center py-4" style="font-size: 0.8rem;">Henüz sorgu geçmişi yok.</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sağ Panel -->
-            <div class="col-lg-8">
-                <div class="card-custom p-4 h-100 d-flex flex-column justify-content-between" id="dashboardContent">
-                    
-                    <div id="welcomeState" class="my-auto text-center py-5">
-                        <div class="mb-3 text-secondary opacity-50">
-                            <i class="fa-solid fa-satellite-dish fa-3x"></i>
-                        </div>
-                        <h4 class="h5 fw-semibold mb-2">Sorgu Bekleniyor</h4>
-                        <p class="text-muted mb-4" style="font-size: 0.85rem; max-width: 400px; margin: 0 auto;">
-                            Sol panelden IP, Domain veya Username hedefi seçerek tarama başlatabilirsiniz.
-                        </p>
-                        <div class="d-flex justify-content-center gap-2 flex-wrap">
-                            <button class="btn btn-sm btn-outline-secondary font-monospace" style="font-size: 0.75rem;" onclick="quickQueryIP('1.1.1.1')">1.1.1.1</button>
-                            <button class="btn btn-sm btn-outline-secondary font-monospace" style="font-size: 0.75rem;" onclick="quickQueryDomain('github.com')">github.com</button>
-                            <button class="btn btn-sm btn-outline-secondary font-monospace" style="font-size: 0.75rem;" onclick="quickQueryUsername('emocxn')">emocxn</button>
-                        </div>
-                    </div>
-
-                    <!-- IP Sonuç Ekranı -->
-                    <div id="resultState" class="d-none">
-                        <div class="d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-25 pb-3 mb-4">
-                            <div>
-                                <span class="label-title">Target Analysis Report</span>
-                                <h3 class="h4 mono fw-bold text-primary m-0" id="resIpTitle">-</h3>
+                <!-- 1. RENDER & SİSTEM PANELİ (EKLENDİ) -->
+                <section id="render-section" class="mb-4">
+                    <div class="card render-card shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="card-title font-mono m-0 text-primary">
+                                    <i class="fa-solid fa-server me-2"></i>Render & Canlı Süreç Monitörü
+                                </h5>
+                                <span class="spinner-grow spinner-grow-sm text-success" role="status"></span>
                             </div>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-sm btn-outline-secondary" onclick="exportJSON()">
-                                    <i class="fa-solid fa-download me-1"></i> Export JSON
-                                </button>
-                                <button class="btn btn-sm btn-outline-secondary" onclick="copyReport()">
-                                    <i class="fa-solid fa-copy me-1"></i> Copy
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-4">
-                                <div class="label-title">IP Type</div>
-                                <div class="info-box" id="resType">-</div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="label-title">Subnet / CIDR</div>
-                                <div class="info-box" id="resSubnet">-</div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="label-title">ISP / Provider</div>
-                                <div class="info-box" id="resIsp">-</div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="label-title">Hostname</div>
-                                <div class="info-box" id="resHostname">-</div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="label-title">City</div>
-                                <div class="info-box" id="resCity">-</div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="label-title">Region</div>
-                                <div class="info-box" id="resRegion">-</div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="label-title">Country</div>
-                                <div class="info-box" id="resCountry">-</div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="label-title">Latitude</div>
-                                <div class="info-box" id="resLat">-</div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="label-title">Longitude</div>
-                                <div class="info-box" id="resLon">-</div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="label-title">Organization</div>
-                                <div class="info-box" id="resOrg">-</div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="label-title">Postal Code</div>
-                                <div class="info-box" id="resZip">-</div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="label-title">Time Zone</div>
-                                <div class="info-box" id="resTimezone">-</div>
-                            </div>
-                            <div class="col-12">
-                                <div class="label-title">Simulated Port Status</div>
-                                <div class="info-box text-success mono" id="resPorts">-</div>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="p-3 border rounded bg-body-tertiary">
+                                        <small class="text-muted d-block">CPU Yükü / Kullanım</small>
+                                        <div class="progress mt-2" style="height: 8px;">
+                                            <div id="cpuProgress" class="progress-bar bg-primary" role="progressbar" style="width: 24%;"></div>
+                                        </div>
+                                        <span id="cpuText" class="font-mono small mt-1 d-block text-end">24% (Optimal)</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3 border rounded bg-body-tertiary">
+                                        <small class="text-muted d-block">Aktif Bellek (RAM)</small>
+                                        <div class="progress mt-2" style="height: 8px;">
+                                            <div id="ramProgress" class="progress-bar bg-success" role="progressbar" style="width: 48%;"></div>
+                                        </div>
+                                        <span id="ramText" class="font-mono small mt-1 d-block text-end">1.9 GB / 4.0 GB</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3 border rounded bg-body-tertiary">
+                                        <small class="text-muted d-block">Render Durumu / FPS</small>
+                                        <div class="d-flex justify-content-between align-items-center mt-2">
+                                            <span class="badge bg-success font-mono">WebGL 2.0 Aktif</span>
+                                            <span class="font-mono fw-bold text-success">60 FPS</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
+                </section>
 
-                    <!-- DNS Sonuç Ekranı -->
-                    <div id="dnsResultState" class="d-none">
-                        <div class="d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-25 pb-3 mb-4">
-                            <div>
-                                <span class="label-title">Domain DNS Resolution</span>
-                                <h3 class="h4 mono fw-bold text-primary m-0" id="resDomainTitle">-</h3>
+                <!-- 2. IP Analiz Bölümü -->
+                <section id="ip-section" class="mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title font-mono mb-3"><i class="fa-solid fa-network-wired me-2 text-primary"></i>IP Adresi Sorgulama</h5>
+                            <div class="input-group mb-3">
+                                <input type="text" id="ipInput" class="form-control font-mono" placeholder="Hedef IP girin (örn: 8.8.8.8 veya boş bırakıp kendi IP'nizi görün)">
+                                <button class="btn btn-primary font-mono" type="button" id="ipSearchBtn">Sorgula</button>
                             </div>
-                        </div>
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <div class="label-title">Resolved IP & Data</div>
-                                <div class="info-box mono" id="resDnsData" style="white-space: pre-wrap;">-</div>
+                            <div id="ipResult" class="terminal-box">
+                                [BosINT_CORE] Sistem hazır. IP analizi bekleniyor...
                             </div>
                         </div>
                     </div>
+                </section>
 
-                    <!-- Username Sonuç Ekranı (Gerçek Sherlock Verileri) -->
-                    <div id="userResultState" class="d-none">
-                        <div class="d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-25 pb-3 mb-3">
-                            <div>
-                                <span class="label-title">Sherlock Real-Time Scan Results</span>
-                                <h3 class="h4 mono fw-bold text-primary m-0" id="resUsernameTitle">-</h3>
+                <!-- 3. Kullanıcı Adı Taraması -->
+                <section id="osint-section" class="mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title font-mono mb-3"><i class="fa-solid fa-user-secret me-2 text-warning"></i>Sosyal Medya / Kullanıcı Taraması</h5>
+                            <div class="input-group mb-3">
+                                <input type="text" id="usernameInput" class="form-control font-mono" placeholder="Kullanıcı adı girin (örn: target_user)">
+                                <button class="btn btn-warning text-dark font-mono fw-bold" type="button" id="usernameSearchBtn">Taramayı Başlat</button>
                             </div>
-                            <div class="text-muted" style="font-size: 0.75rem;" id="resScanMeta">Scanning via Local Python Bridge...</div>
-                        </div>
-
-                        <div class="overflow-y-auto pe-2" style="max-height: 420px;" id="userDashboardGrid">
-                            <div class="text-center text-muted py-5">Tarama yapılıyor, lütfen bekleyin...</div>
+                            <div id="usernameResult" class="row g-2 font-mono small">
+                                <!-- Dinamik sonuç kartları buraya gelecek -->
+                            </div>
                         </div>
                     </div>
+                </section>
 
-                    <div class="text-center text-muted border-top border-secondary border-opacity-25 pt-3 mt-auto" style="font-size: 0.75rem;">
-                        BosINT OSINT Platform • Powered by Python Sherlock Bridge
-                    </div>
-
-                </div>
-            </div>
-
+            </main>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap 5.3 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        let searchHistory = [];
-        let lastData = null;
+        // Tema Değiştirici
+        const themeToggle = document.getElementById('themeToggle');
+        const htmlElement = document.documentElement;
 
-        function toggleTheme() {
-            let html = document.getElementById('htmlRoot');
-            if(html.classList.contains('dark')) {
-                html.classList.remove('dark');
-                html.classList.add('light');
-            } else {
-                html.classList.remove('light');
-                html.classList.add('dark');
-            }
-        }
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = htmlElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            htmlElement.setAttribute('data-bs-theme', newTheme);
+            themeToggle.innerHTML = newTheme === 'dark' ? '<i class="fa-solid fa-moon"></i> Tema' : '<i class="fa-solid fa-sun"></i> Tema';
+        });
 
-        function isValidIP(ip) {
-            return /^(\d{1,3}\.){3}\d{1,3}$/.test(ip);
-        }
-
-        async function pasteClipboard(elementId) {
-            try {
-                let text = await navigator.clipboard.readText();
-                document.getElementById(elementId).value = text.trim();
-            } catch (err) {
-                alert("Panodan okuma izni reddedildi.");
-            }
-        }
-
-        function quickQueryIP(ip) {
-            document.getElementById('ipInput').value = ip;
-            var tab = new bootstrap.Tab(document.getElementById('ip-tab'));
-            tab.show();
-            lookupIP();
-        }
-
-        function quickQueryDomain(domain) {
-            document.getElementById('domainInput').value = domain;
-            var tab = new bootstrap.Tab(document.getElementById('dns-tab'));
-            tab.show();
-            lookupDNS();
-        }
-
-        function quickQueryUsername(username) {
-            document.getElementById('userInput').value = username;
-            var tab = new bootstrap.Tab(document.getElementById('user-tab'));
-            tab.show();
-            lookupUsername();
-        }
-
-        async function lookupMyIP() {
-            try {
-                let res = await fetch('https://api.ipify.org?format=json');
-                let data = await res.json();
-                quickQueryIP(data.ip);
-            } catch (err) {
-                alert("Kendi IP adresiniz alınamadı.");
-            }
-        }
-
-        async function lookupIP() {
-            let ip = document.getElementById('ipInput').value.trim();
-            if(!ip) return alert("Lütfen bir IP adresi girin!");
-            if(!isValidIP(ip)) return alert("Hatalı IPv4 formatı!");
+        // IP Sorgulama Simülasyonu / Entegrasyonu
+        document.getElementById('ipSearchBtn').addEventListener('click', async () => {
+            const ip = document.getElementById('ipInput').value.trim();
+            const resultBox = document.getElementById('ipResult');
+            resultBox.innerHTML = `[+] Sorgulanıyor: ${ip || 'Yerel IP'}...`;
 
             try {
-                let response = await fetch(`https://ipwho.is/${ip}`);
-                let data = await response.json();
+                const targetUrl = ip ? `https://ipwho.is/${ip}` : `https://ipwho.is/`;
+                const response = await fetch(targetUrl);
+                const data = await response.json();
 
-                if(!data.success) {
-                    alert("Sorgulama başarısız: " + (data.message || "Bilinmeyen hata"));
-                    return;
+                if (data.success) {
+                    resultBox.innerHTML = `
+> IP: ${data.ip}
+> Tür: ${data.type}
+> Ülke: ${data.country} (${data.country_code})
+> Şehir: ${data.city}
+> ISS (ISP): ${data.connection.isp}
+> Koordinat: Lat ${data.latitude}, Lon ${data.longitude}
+> Zaman Dilimi: ${data.timezone.id}
+[✓] Analiz başarıyla tamamlandı.`;
+                } else {
+                    resultBox.innerHTML = `[!] Hata: ${data.message || 'Bilinmeyen hata'}`;
                 }
-
-                lastData = data;
-                document.getElementById('welcomeState').classList.add('d-none');
-                document.getElementById('dnsResultState').classList.add('d-none');
-                document.getElementById('userResultState').classList.add('d-none');
-                document.getElementById('resultState').classList.remove('d-none');
-
-                document.getElementById('resIpTitle').innerText = data.ip;
-                document.getElementById('resType').innerText = data.type || 'IPv4';
-                
-                let subnetParts = data.ip.split('.');
-                subnetParts[3] = '0';
-                document.getElementById('resSubnet').innerText = `${subnetParts.join('.')}/24`;
-
-                document.getElementById('resIsp').innerText = data.connection?.isp || 'Unknown';
-                document.getElementById('resHostname').innerText = data.connection?.domain || 'Unknown';
-                document.getElementById('resCity').innerText = data.city || 'Unknown';
-                document.getElementById('resRegion').innerText = data.region || 'Unknown';
-                document.getElementById('resCountry').innerText = data.country_code || 'Unknown';
-                
-                let lat = data.latitude || '0';
-                let lon = data.longitude || '0';
-
-                document.getElementById('resLat').innerHTML = `${lat} <a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank" class="float-end text-primary" title="Haritada Aç"><i class="fa-solid fa-map-location-dot"></i> Harita</a>`;
-                document.getElementById('resLon').innerHTML = `${lon} <a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank" class="float-end text-primary" title="Haritada Aç"><i class="fa-solid fa-map-location-dot"></i> Harita</a>`;
-
-                document.getElementById('resOrg').innerText = data.connection?.org || 'Unknown';
-                document.getElementById('resZip').innerText = data.postal || 'N/A';
-                document.getElementById('resTimezone').innerText = data.timezone?.id || 'Unknown';
-                document.getElementById('resPorts').innerText = `[Port 21: FILTERED] | [Port 22: OPEN (SSH)] | [Port 80: OPEN (HTTP)] | [Port 443: OPEN (HTTPS)] | [Port 3389: CLOSED]`;
-
-                addToHistory(data.ip);
             } catch (err) {
-                alert("Bağlantı hatası oluştu.");
+                resultBox.innerHTML = `[!] Ağ Hatası: API bağlantısı kurulamadı.`;
             }
-        }
+        });
 
-        async function lookupDNS() {
-            let domain = document.getElementById('domainInput').value.trim();
-            if(!domain) return alert("Lütfen bir domain adı girin!");
-
-            try {
-                let res = await fetch(`https://cloudflare-dns.com/dns-query?name=${domain}&type=A`, {
-                    headers: { 'Accept': 'application/dns-json' }
-                });
-                let data = await res.json();
-
-                document.getElementById('welcomeState').classList.add('d-none');
-                document.getElementById('resultState').classList.add('d-none');
-                document.getElementById('userResultState').classList.add('d-none');
-                document.getElementById('dnsResultState').classList.remove('d-none');
-
-                document.getElementById('resDomainTitle').innerText = domain;
-                let answers = data.Answer ? data.Answer.map(a => `Name: ${a.name}\nType: ${a.type}\nTTL: ${a.TTL}\nIP/Data: ${a.data}\n-------------------`).join('\n') : "Kayıt bulunamadı.";
-                document.getElementById('resDnsData').innerText = answers;
-
-                addToHistory(domain);
-            } catch (err) {
-                alert("DNS sorgulama hatası.");
-            }
-        }
-
-        async function lookupUsername() {
-            let username = document.getElementById('userInput').value.trim();
-            if(!username) return alert("Lütfen bir kullanıcı adı girin!");
-
-            document.getElementById('welcomeState').classList.add('d-none');
-            document.getElementById('resultState').classList.add('d-none');
-            document.getElementById('dnsResultState').classList.add('d-none');
-            document.getElementById('userResultState').classList.remove('d-none');
-
-            document.getElementById('resUsernameTitle').innerText = username;
-            document.getElementById('resScanMeta').innerText = "Scanning via Local Python Bridge...";
-            document.getElementById('userDashboardGrid').innerHTML = `<div class="text-center text-muted py-5"><i class="fa-solid fa-spinner fa-spin fa-2x mb-2"></i><br>Sherlock taranıyor, bu işlem birkaç saniye sürebilir...</div>`;
-
-            try {
-                let response = await fetch(`http://localhost:5000/search?username=${encodeURIComponent(username)}`);
-                let data = await response.json();
-
-                if(data.error) {
-                    document.getElementById('userDashboardGrid').innerHTML = `<div class="text-danger text-center py-4">${data.error}</div>`;
-                    return;
-                }
-
-                let sites = data.found_sites;
-                let keys = Object.keys(sites);
-
-                if(keys.length === 0) {
-                    document.getElementById('userDashboardGrid').innerHTML = `<div class="text-muted text-center py-4">Bu kullanıcı adına ait eşleşen hesap bulunamadı.</div>`;
-                    document.getElementById('resScanMeta').innerText = `0 profiles found`;
-                    return;
-                }
-
-                let gridHtml = '<div class="row g-3">';
-                for(let site of keys) {
-                    let url = sites[site];
-                    gridHtml += `
-                        <div class="col-md-6">
-                            <div class="osint-grid-card d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="label-title text-primary"><i class="fa-solid fa-globe me-1"></i> ${site.toUpperCase()}</div>
-                                    <div class="fw-bold mono text-truncate" style="max-width: 250px;">${username}</div>
-                                    <small class="text-muted text-truncate d-block" style="max-width: 250px;">${url}</small>
-                                </div>
-                                <a href="${url}" target="_blank" class="btn btn-sm btn-outline-primary py-1 px-2" style="font-size: 0.75rem;">Open</a>
-                            </div>
-                        </div>
-                    `;
-                }
-                gridHtml += '</div>';
-
-                document.getElementById('userDashboardGrid').innerHTML = gridHtml;
-                document.getElementById('resScanMeta').innerText = `${keys.length} profiles found via Sherlock`;
-                addToHistory(username);
-
-            } catch (err) {
-                document.getElementById('userDashboardGrid').innerHTML = `<div class="text-danger text-center py-4">Python sunucusuna bağlanılamadı! Lütfen konsoldan 'python app.py' komutunu çalıştırdığınızdan emin olun.</div>`;
-            }
-        }
-
-        function addToHistory(item) {
-            if(!searchHistory.includes(item)) {
-                searchHistory.unshift(item);
-                if(searchHistory.length > 10) searchHistory.pop();
-            }
-
-            let listHTML = '';
-            searchHistory.forEach(val => {
-                let isIp = isValidIP(val);
-                let func = isIp ? `quickQueryIP('${val}')` : (val.includes('.') && !val.includes(' ') ? `quickQueryDomain('${val}')` : `quickQueryUsername('${val}')`);
-                listHTML += `<div class="history-item mono d-flex justify-content-between align-items-center" onclick="${func}">
-                    <span><i class="fa-solid fa-angle-right text-primary me-2" style="font-size:10px;"></i>${val}</span>
-                    <i class="fa-solid fa-arrow-up-right-from-square text-muted" style="font-size:10px;"></i>
-                </div>`;
-            });
-            document.getElementById('historyList').innerHTML = listHTML;
-        }
-
-        function clearHistory() {
-            searchHistory = [];
-            document.getElementById('historyList').innerHTML = '<div class="text-muted text-center py-4" style="font-size: 0.8rem;">Henüz sorgu geçmişi yok.</div>';
-        }
-
-        function exportJSON() {
-            if(!lastData) return alert("İndirilecek veri yok!");
-            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(lastData, null, 4));
-            let dlAnchor = document.createElement('a');
-            dlAnchor.setAttribute("href", dataStr);
-            dlAnchor.setAttribute("download", `BosINT_${lastData.ip}_report.json`);
-            document.body.appendChild(dlAnchor);
-            dlAnchor.click();
-            dlAnchor.remove();
-        }
-
-        function copyReport() {
-            if(!lastData) return;
-            navigator.clipboard.writeText(JSON.stringify(lastData, null, 2));
-            alert("Rapor panoya kopyalandı!");
-        }
+        // Canlı Render / CPU Değer Simülasyonu
+        setInterval(() => {
+            const cpuBar = document.getElementById('cpuProgress');
+            const cpuText = document.getElementById('cpuText');
+            const randomCpu = Math.floor(Math.random() * (35 - 18 + 1)) + 18;
+            cpuBar.style.width = randomCpu + '%';
+            cpuText.innerText = randomCpu + '% (Optimal)';
+        }, 3000);
     </script>
 </body>
 </html>
