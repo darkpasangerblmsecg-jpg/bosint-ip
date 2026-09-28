@@ -1,6 +1,7 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 import requests
+import os
 
 app = Flask(__name__)
 CORS(app)  # Arayüzün farklı bir porttan/domainden istek atabilmesi için CORS aktif edilir
@@ -48,7 +49,8 @@ def search_username():
 
 @app.route('/', methods=['GET'])
 def home():
-    return jsonify({"status": "BosINT API Bridge is online!"})
+    # Artık ana dizine girildiğinde doğrudan index.html arayüzünü sunar
+    return send_from_directory(os.path.dirname(os.path.abspath(__file__)), 'index.html')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
