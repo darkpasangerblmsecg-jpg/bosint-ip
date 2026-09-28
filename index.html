@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BosINT v4.1-PRO // Advanced OSINT Suite</title>
+    <title>BosINT v4.1-PRO</title>
     <!-- Bootstrap 5.3 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts: JetBrains Mono & Inter -->
+    <!-- Google Fonts: Inter & JetBrains Mono -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -17,215 +17,224 @@
         }
         body {
             font-family: var(--bs-body-font-family);
-            background-color: var(--bs-tertiary-bg);
-            color: var(--bs-body-color);
-            transition: background-color 0.3s ease;
+            background-color: #0b0f19;
+            color: #e2e8f0;
         }
         .font-mono {
             font-family: var(--font-mono);
         }
-        .sidebar {
-            min-height: 100vh;
-            background-color: var(--bs-body-bg);
-            border-right: 1px solid var(--bs-border-color);
+        .navbar-custom {
+            background-color: #111827;
+            border-bottom: 1px solid #1f2937;
         }
         .card {
-            border: 1px solid var(--bs-border-color);
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            background-color: #111827;
+            border: 1px solid #1f2937;
         }
-        .terminal-box {
-            background-color: #0b0f19;
-            color: #38ef7d;
-            font-family: var(--font-mono);
-            border-radius: 6px;
-            padding: 15px;
-            min-height: 180px;
-            max-height: 250px;
-            overflow-y: auto;
+        .form-control {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            color: #fff;
         }
-        .render-card {
-            background: linear-gradient(135deg, rgba(13, 110, 253, 0.05), rgba(25, 135, 84, 0.05));
-            border-left: 4px solid #0d6efd;
+        .form-control:focus {
+            background-color: #1f2937;
+            color: #fff;
+            border-color: #3b82f6;
+            box-shadow: none;
+        }
+        .result-card {
+            background-color: #111827;
+            border: 1px solid #1f2937;
+            transition: all 0.2s;
+        }
+        .result-card:hover {
+            border-color: #3b82f6;
         }
     </style>
 </head>
 <body>
 
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar collapse p-3">
-                <div class="position-sticky">
-                    <div class="d-flex align-items-center mb-4 px-2">
-                        <i class="fa-solid fa-terminal text-primary fs-3 me-2"></i>
+    <!-- Top Navbar -->
+    <nav class="navbar navbar-expand navbar-custom px-4 py-2">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center gap-2 text-white" href="#">
+                <div class="bg-primary p-2 rounded text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                    <i class="fa-solid fa-shield-halved fa-sm"></i>
+                </div>
+                <span class="fw-bold font-mono fs-5">BosINT</span>
+                <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 font-mono" style="font-size: 10px;">v4.1-PRO</span>
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 font-mono py-2 px-3">
+                    <i class="fa-solid fa-circle fa-2xs me-1"></i> System Online • API Bridge Active
+                </span>
+                <button id="themeToggle" class="btn btn-sm btn-outline-secondary border-secondary">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+                <button class="btn btn-sm btn-primary font-mono fw-bold">
+                    <i class="fa-solid fa-user-shield me-1"></i> My IP Lookup
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container-fluid p-4">
+        <div class="row g-4">
+            
+            <!-- Left Panel / Controls -->
+            <div class="col-lg-4">
+                <!-- Navigation Tabs -->
+                <div class="card p-3 mb-4">
+                    <div class="d-flex gap-2 mb-4">
+                        <button class="btn btn-sm btn-outline-secondary text-white border-0 flex-fill"><i class="fa-solid fa-network-wired me-1"></i> IP</button>
+                        <button class="btn btn-sm btn-outline-secondary text-white border-0 flex-fill"><i class="fa-solid fa-globe me-1"></i> Domain</button>
+                        <button class="btn btn-sm btn-primary flex-fill font-mono"><i class="fa-solid fa-user-secret me-1"></i> Username</button>
+                    </div>
+
+                    <label class="form-label font-mono small text-muted">TARGET USERNAME (API BRIDGE)</label>
+                    <div class="input-group mb-3">
+                        <input type="text" id="usernameInput" class="form-control font-mono" value="emocxn">
+                        <button class="btn btn-outline-secondary" type="button"><i class="fa-regular fa-copy"></i></button>
+                    </div>
+                    <button id="usernameSearchBtn" class="btn btn-primary w-100 font-mono fw-bold py-2">
+                        <i class="fa-solid fa-fingerprint me-2"></i>Run Username Scan
+                    </button>
+                </div>
+
+                <!-- Query History -->
+                <div class="card p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="font-mono small text-muted"><i class="fa-solid fa-clock-rotate-left me-1"></i> QUERY HISTORY</span>
+                        <i class="fa-solid fa-trash-can text-muted" style="cursor: pointer; font-size: 12px;"></i>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background-color: #1f2937;">
+                        <span class="font-mono text-primary small"><i class="fa-solid fa-chevron-right fa-2xs me-2"></i>emocxn</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-muted" style="font-size: 12px;"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel / Results -->
+            <div class="col-lg-8">
+                <div class="card p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
                         <div>
-                            <h5 class="m-0 fw-bold font-mono">BosINT</h5>
-                            <small class="text-muted">v4.1-PRO Core</small>
+                            <span class="font-mono small text-muted d-block mb-1">USERNAME SCAN RESULTS</span>
+                            <h3 class="font-mono fw-bold text-primary m-0" id="resultUsernameTitle">emocxn</h3>
+                        </div>
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 font-mono px-3 py-2">
+                            Toplam <span id="resultCount">163</span> sonuç bulundu
+                        </span>
+                    </div>
+
+                    <hr class="border-secondary opacity-25 mb-4">
+
+                    <!-- Results Grid -->
+                    <div class="row g-3" id="resultsGrid">
+                        <!-- Örnek Kart 1 -->
+                        <div class="col-md-6">
+                            <div class="result-card p-3 rounded position-relative">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="font-mono fw-bold small text-info"><i class="fa-solid fa-globe me-1"></i> 247CTF</span>
+                                    <a href="https://247ctf.com/progress/emocxn" target="_blank" class="btn btn-sm btn-outline-primary font-mono py-0 px-2" style="font-size: 11px;">Open</a>
+                                </div>
+                                <span class="font-mono d-block text-white mb-1" style="font-size: 13px;">emocxn</span>
+                                <span class="font-mono text-muted text-truncate d-block" style="font-size: 11px;">https://247ctf.com/progress/emocxn</span>
+                            </div>
+                        </div>
+
+                        <!-- Örnek Kart 2 -->
+                        <div class="col-md-6">
+                            <div class="result-card p-3 rounded position-relative">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="font-mono fw-bold small text-info"><i class="fa-solid fa-globe me-1"></i> 35PHOTO</span>
+                                    <a href="https://35photo.pro/@emocxn/" target="_blank" class="btn btn-sm btn-outline-primary font-mono py-0 px-2" style="font-size: 11px;">Open</a>
+                                </div>
+                                <span class="font-mono d-block text-white mb-1" style="font-size: 13px;">emocxn</span>
+                                <span class="font-mono text-muted text-truncate d-block" style="font-size: 11px;">https://35photo.pro/@emocxn/</span>
+                            </div>
+                        </div>
+
+                        <!-- Örnek Kart 3 -->
+                        <div class="col-md-6">
+                            <div class="result-card p-3 rounded position-relative">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="font-mono fw-bold small text-info"><i class="fa-solid fa-globe me-1"></i> ARCH LINUX GITLAB</span>
+                                    <a href="#" target="_blank" class="btn btn-sm btn-outline-primary font-mono py-0 px-2" style="font-size: 11px;">Open</a>
+                                </div>
+                                <span class="font-mono d-block text-white mb-1" style="font-size: 13px;">emocxn</span>
+                                <span class="font-mono text-muted text-truncate d-block" style="font-size: 11px;">https://gitlab.archlinux.org/api/v4/users?u...</span>
+                            </div>
+                        </div>
+
+                        <!-- Örnek Kart 4 -->
+                        <div class="col-md-6">
+                            <div class="result-card p-3 rounded position-relative">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="font-mono fw-bold small text-info"><i class="fa-solid fa-globe me-1"></i> ARDUINO (PROJECT HUB)</span>
+                                    <a href="#" target="_blank" class="btn btn-sm btn-outline-primary font-mono py-0 px-2" style="font-size: 11px;">Open</a>
+                                </div>
+                                <span class="font-mono d-block text-white mb-1" style="font-size: 13px;">emocxn</span>
+                                <span class="font-mono text-muted text-truncate d-block" style="font-size: 11px;">https://projecthub.arduino.cc/emocxn</span>
+                            </div>
                         </div>
                     </div>
-                    <ul class="nav flex-column gap-1">
-                        <li class="nav-item">
-                            <a class="nav-link active rounded bg-primary text-white" href="#ip-section"><i class="fa-solid fa-network-wired me-2"></i> IP İstihbaratı</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link rounded text-secondary" href="#dns-section"><i class="fa-solid fa-globe me-2"></i> Domain / DNS</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link rounded text-secondary" href="#osint-section"><i class="fa-solid fa-user-secret me-2"></i> Kullanıcı Taraması</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link rounded text-secondary" href="#render-section"><i class="fa-solid fa-microchip me-2"></i> Render & Sistem</a>
-                        </li>
-                    </ul>
                 </div>
-            </nav>
+            </div>
 
-            <!-- Main Content -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
-                
-                <!-- Top Navbar / Controls -->
-                <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-                    <div>
-                        <h2 class="h4 fw-bold m-0 font-mono"><i class="fa-solid fa-shield-halved text-success"></i> INTELLIGENCE DASHBOARD</h2>
-                        <span class="badge bg-success-subtle text-success border border-success-subtle mt-1 font-mono">Status: ACTIVE</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-3">
-                        <button id="themeToggle" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-                            <i class="fa-solid fa-moon"></i> Tema
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 1. RENDER & SİSTEM PANELİ -->
-                <section id="render-section" class="mb-4">
-                    <div class="card render-card shadow-sm">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="card-title font-mono m-0 text-primary">
-                                    <i class="fa-solid fa-server me-2"></i>Render & Canlı Süreç Monitörü
-                                </h5>
-                                <span class="spinner-grow spinner-grow-sm text-success" role="status"></span>
-                            </div>
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <div class="p-3 border rounded bg-body-tertiary">
-                                        <small class="text-muted d-block">CPU Yükü / Kullanım</small>
-                                        <div class="progress mt-2" style="height: 8px;">
-                                            <div id="cpuProgress" class="progress-bar bg-primary" role="progressbar" style="width: 24%;"></div>
-                                        </div>
-                                        <span id="cpuText" class="font-mono small mt-1 d-block text-end">24% (Optimal)</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="p-3 border rounded bg-body-tertiary">
-                                        <small class="text-muted d-block">Aktif Bellek (RAM)</small>
-                                        <div class="progress mt-2" style="height: 8px;">
-                                            <div id="ramProgress" class="progress-bar bg-success" role="progressbar" style="width: 48%;"></div>
-                                        </div>
-                                        <span id="ramText" class="font-mono small mt-1 d-block text-end">1.9 GB / 4.0 GB</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="p-3 border rounded bg-body-tertiary">
-                                        <small class="text-muted d-block">Render Durumu / FPS</small>
-                                        <div class="d-flex justify-content-between align-items-center mt-2">
-                                            <span class="badge bg-success font-mono">WebGL 2.0 Aktif</span>
-                                            <span class="font-mono fw-bold text-success">60 FPS</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- 2. IP Analiz Bölümü -->
-                <section id="ip-section" class="mb-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title font-mono mb-3"><i class="fa-solid fa-network-wired me-2 text-primary"></i>IP Adresi Sorgulama</h5>
-                            <div class="input-group mb-3">
-                                <input type="text" id="ipInput" class="form-control font-mono" placeholder="Hedef IP girin (örn: 8.8.8.8 veya boş bırakıp kendi IP'nizi görün)">
-                                <button class="btn btn-primary font-mono" type="button" id="ipSearchBtn">Sorgula</button>
-                            </div>
-                            <div id="ipResult" class="terminal-box">
-                                [BosINT_CORE] Sistem hazır. IP analizi bekleniyor...
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- 3. Kullanıcı Adı Taraması -->
-                <section id="osint-section" class="mb-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title font-mono mb-3"><i class="fa-solid fa-user-secret me-2 text-warning"></i>Sosyal Medya / Kullanıcı Taraması</h5>
-                            <div class="input-group mb-3">
-                                <input type="text" id="usernameInput" class="form-control font-mono" placeholder="Kullanıcı adı girin (örn: target_user)">
-                                <button class="btn btn-warning text-dark font-mono fw-bold" type="button" id="usernameSearchBtn">Taramayı Başlat</button>
-                            </div>
-                            <div id="usernameResult" class="row g-2 font-mono small">
-                                <!-- Dinamik sonuç kartları buraya gelecek -->
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-            </main>
         </div>
     </div>
 
-    <!-- Bootstrap 5.3 JS Bundle -->
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Tema Değiştirici
-        const themeToggle = document.getElementById('themeToggle');
-        const htmlElement = document.documentElement;
+        // Python Flask API Bridge Bağlantısı (Arka plandaki /search uç noktası ile çalışır)
+        document.getElementById('usernameSearchBtn').addEventListener('click', async () => {
+            const username = document.getElementById('usernameInput').value.trim();
+            const grid = document.getElementById('resultsGrid');
+            const title = document.getElementById('resultUsernameTitle');
+            const countBadge = document.getElementById('resultCount');
 
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = htmlElement.getAttribute('data-bs-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            htmlElement.setAttribute('data-bs-theme', newTheme);
-            themeToggle.innerHTML = newTheme === 'dark' ? '<i class="fa-solid fa-moon"></i> Tema' : '<i class="fa-solid fa-sun"></i> Tema';
-        });
+            if (!username) return;
 
-        // IP Sorgulama Simülasyonu / Entegrasyonu
-        document.getElementById('ipSearchBtn').addEventListener('click', async () => {
-            const ip = document.getElementById('ipInput').value.trim();
-            const resultBox = document.getElementById('ipResult');
-            resultBox.innerHTML = `[+] Sorgulanıyor: ${ip || 'Yerel IP'}...`;
+            title.innerText = username;
+            grid.innerHTML = '<div class="text-center py-5 font-mono text-primary"><i class="fa-solid fa-spinner fa-spin me-2"></i>Taranıyor...</div>';
 
             try {
-                const targetUrl = ip ? `https://ipwho.is/${ip}` : `https://ipwho.is/`;
-                const response = await fetch(targetUrl);
+                // Render üzerindeki Python Flask sunucusuna istek atar
+                const response = await fetch(`/search?username=${username}`);
                 const data = await response.json();
 
-                if (data.success) {
-                    resultBox.innerHTML = `
-> IP: ${data.ip}
-> Tür: ${data.type}
-> Ülke: ${data.country} (${data.country_code})
-> Şehir: ${data.city}
-> ISS (ISP): ${data.connection.isp}
-> Koordinat: Lat ${data.latitude}, Lon ${data.longitude}
-> Zaman Dilimi: ${data.timezone.id}
-[✓] Analiz başarıyla tamamlandı.`;
-                } else {
-                    resultBox.innerHTML = `[!] Hata: ${data.message || 'Bilinmeyen hata'}`;
+                if (data.found_sites) {
+                    grid.innerHTML = '';
+                    const entries = Object.entries(data.found_sites);
+                    countBadge.innerText = entries.length;
+
+                    if (entries.length === 0) {
+                        grid.innerHTML = '<div class="text-center py-4 font-mono text-muted">Hiçbir sonuç bulunamadı.</div>';
+                        return;
+                    }
+
+                    entries.forEach(([platform, url]) => {
+                        grid.innerHTML += `
+                            <div class="col-md-6">
+                                <div class="result-card p-3 rounded position-relative">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <span class="font-mono fw-bold small text-info"><i class="fa-solid fa-globe me-1"></i> ${platform.toUpperCase()}</span>
+                                        <a href="${url}" target="_blank" class="btn btn-sm btn-outline-primary font-mono py-0 px-2" style="font-size: 11px;">Open</a>
+                                    </div>
+                                    <span class="font-mono d-block text-white mb-1" style="font-size: 13px;">${username}</span>
+                                    <span class="font-mono text-muted text-truncate d-block" style="font-size: 11px;">${url}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
                 }
             } catch (err) {
-                resultBox.innerHTML = `[!] Ağ Hatası: API bağlantısı kurulamadı.`;
+                grid.innerHTML = '<div class="text-center py-4 font-mono text-danger">API Bağlantı Hatası! Flask sunucusunu kontrol edin.</div>';
             }
         });
-
-        // Canlı Render / CPU Değer Simülasyonu
-        setInterval(() => {
-            const cpuBar = document.getElementById('cpuProgress');
-            const cpuText = document.getElementById('cpuText');
-            const randomCpu = Math.floor(Math.random() * (35 - 18 + 1)) + 18;
-            cpuBar.style.width = randomCpu + '%';
-            cpuText.innerText = randomCpu + '% (Optimal)';
-        }, 3000);
     </script>
 </body>
 </html>
