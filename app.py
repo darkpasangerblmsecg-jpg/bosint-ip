@@ -42,7 +42,6 @@ def search_username():
         "found_sites": found_sites
     })
 
-# Türkiye ve Avrupa Odaklı Telefon / Operatör Analizi
 @app.route('/search-phone', methods=['GET'])
 def search_phone():
     phone = request.args.get('phone')
@@ -51,13 +50,28 @@ def search_phone():
 
     clean_phone = phone.strip()
 
-    # 1. TÜRKİYE (+90) KONTROLÜ
+    # 1. TÜRKİYE (+90) KONTROLÜ VE OPERATÖR TAHMİNİ
     if clean_phone.startswith("+90") or clean_phone.startswith("90"):
+        # Numara formatından alan kodunu ayıkla (Örn: +90546... -> 546)
+        digits_only = clean_phone.replace("+", "").replace(" ", "")
+        if digits_only.startswith("90") and len(digits_only) >= 5:
+            prefix = digits_only[2:5]
+        else:
+            prefix = ""
+
+        operator_guess = "Bilinmiyor (Numara Taşınmış Olabilir)"
+        if prefix.startswith('53'):
+            operator_guess = "Turkcell (Veya Taşınmış Diğer Operatör)"
+        elif prefix.startswith('54'):
+            operator_guess = "Vodafone (Veya Taşınmış Diğer Operatör)"
+        elif prefix.startswith('55'):
+            operator_guess = "Türk Telekom (Veya Taşınmış Diğer Operatör)"
+
         return jsonify({
             "found": True,
             "phone": clean_phone,
             "full_name": "Kayıtlı Abone (Gizli / KVKK)",
-            "operator": "Turkcell / Vodafone / Türk Telekom",
+            "operator": operator_guess,
             "country": "Türkiye",
             "source": "TR Telecom & Carrier Database"
         })
