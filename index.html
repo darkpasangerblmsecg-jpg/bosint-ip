@@ -17,34 +17,35 @@
         }
         body {
             font-family: var(--bs-body-font-family);
-            background-color: #0b0f19;
-            color: #e2e8f0;
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+            transition: background-color 0.3s ease;
         }
         .font-mono {
             font-family: var(--font-mono);
         }
         .navbar-custom {
-            background-color: #111827;
-            border-bottom: 1px solid #1f2937;
+            background-color: var(--bs-tertiary-bg);
+            border-bottom: 1px solid var(--bs-border-color);
         }
         .card {
-            background-color: #111827;
-            border: 1px solid #1f2937;
+            background-color: var(--bs-tertiary-bg);
+            border: 1px solid var(--bs-border-color);
         }
         .form-control {
-            background-color: #1f2937;
-            border: 1px solid #374151;
-            color: #fff;
+            background-color: var(--bs-body-bg);
+            border: 1px solid var(--bs-border-color);
+            color: var(--bs-body-color);
         }
         .form-control:focus {
-            background-color: #1f2937;
-            color: #fff;
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
             border-color: #3b82f6;
             box-shadow: none;
         }
         .result-card {
-            background-color: #111827;
-            border: 1px solid #1f2937;
+            background-color: var(--bs-body-bg);
+            border: 1px solid var(--bs-border-color);
             transition: all 0.2s;
         }
         .result-card:hover {
@@ -57,7 +58,7 @@
     <!-- Top Navbar -->
     <nav class="navbar navbar-expand navbar-custom px-4 py-2">
         <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center gap-2 text-white" href="#">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="#">
                 <div class="bg-primary p-2 rounded text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
                     <i class="fa-solid fa-shield-halved fa-sm"></i>
                 </div>
@@ -71,7 +72,7 @@
                 <button id="themeToggle" class="btn btn-sm btn-outline-secondary border-secondary">
                     <i class="fa-solid fa-moon"></i>
                 </button>
-                <button class="btn btn-sm btn-primary font-mono fw-bold">
+                <button id="myIpLookupBtn" class="btn btn-sm btn-primary font-mono fw-bold">
                     <i class="fa-solid fa-user-shield me-1"></i> My IP Lookup
                 </button>
             </div>
@@ -87,30 +88,35 @@
                 <!-- Navigation Tabs -->
                 <div class="card p-3 mb-4">
                     <div class="d-flex gap-2 mb-4">
-                        <button class="btn btn-sm btn-outline-secondary text-white border-0 flex-fill"><i class="fa-solid fa-network-wired me-1"></i> IP</button>
-                        <button class="btn btn-sm btn-outline-secondary text-white border-0 flex-fill"><i class="fa-solid fa-globe me-1"></i> Domain</button>
-                        <button class="btn btn-sm btn-primary flex-fill font-mono"><i class="fa-solid fa-user-secret me-1"></i> Username</button>
+                        <button id="tabIp" class="btn btn-sm btn-outline-secondary text-white border-0 flex-fill"><i class="fa-solid fa-network-wired me-1"></i> IP</button>
+                        <button id="tabDomain" class="btn btn-sm btn-outline-secondary text-white border-0 flex-fill"><i class="fa-solid fa-globe me-1"></i> Domain</button>
+                        <button id="tabUsername" class="btn btn-sm btn-primary flex-fill font-mono"><i class="fa-solid fa-user-secret me-1"></i> Username</button>
                     </div>
 
-                    <label class="form-label font-mono small text-muted">TARGET USERNAME (API BRIDGE)</label>
-                    <div class="input-group mb-3">
-                        <input type="text" id="usernameInput" class="form-control font-mono" value="emocxn">
-                        <button class="btn btn-outline-secondary" type="button"><i class="fa-regular fa-copy"></i></button>
+                    <!-- Input Alanı (Dinamik değişir) -->
+                    <div id="inputSection">
+                        <label class="form-label font-mono small text-muted" id="inputLabel">TARGET USERNAME (API BRIDGE)</label>
+                        <div class="input-group mb-3">
+                            <input type="text" id="targetInput" class="form-control font-mono" value="emocxn">
+                            <button class="btn btn-outline-secondary" type="button" id="clearInputBtn"><i class="fa-regular fa-copy"></i></button>
+                        </div>
+                        <button id="actionBtn" class="btn btn-primary w-100 font-mono fw-bold py-2">
+                            <i class="fa-solid fa-fingerprint me-2"></i>Run Username Scan
+                        </button>
                     </div>
-                    <button id="usernameSearchBtn" class="btn btn-primary w-100 font-mono fw-bold py-2">
-                        <i class="fa-solid fa-fingerprint me-2"></i>Run Username Scan
-                    </button>
                 </div>
 
                 <!-- Query History -->
                 <div class="card p-3">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <span class="font-mono small text-muted"><i class="fa-solid fa-clock-rotate-left me-1"></i> QUERY HISTORY</span>
-                        <i class="fa-solid fa-trash-can text-muted" style="cursor: pointer; font-size: 12px;"></i>
+                        <i class="fa-solid fa-trash-can text-muted" style="cursor: pointer; font-size: 12px;" onclick="document.getElementById('historyBox').innerHTML=''"></i>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background-color: #1f2937;">
-                        <span class="font-mono text-primary small"><i class="fa-solid fa-chevron-right fa-2xs me-2"></i>emocxn</span>
-                        <i class="fa-solid fa-arrow-up-right-from-square text-muted" style="font-size: 12px;"></i>
+                    <div id="historyBox">
+                        <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2" style="background-color: var(--bs-body-bg);">
+                            <span class="font-mono text-primary small"><i class="fa-solid fa-chevron-right fa-2xs me-2"></i>emocxn</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-muted" style="font-size: 12px;"></i>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -120,8 +126,8 @@
                 <div class="card p-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div>
-                            <span class="font-mono small text-muted d-block mb-1">USERNAME SCAN RESULTS</span>
-                            <h3 class="font-mono fw-bold text-primary m-0" id="resultUsernameTitle">emocxn</h3>
+                            <span class="font-mono small text-muted d-block mb-1" id="resultHeaderType">USERNAME SCAN RESULTS</span>
+                            <h3 class="font-mono fw-bold text-primary m-0" id="resultTitle">emocxn</h3>
                         </div>
                         <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 font-mono px-3 py-2">
                             Toplam <span id="resultCount">163</span> sonuç bulundu
@@ -155,30 +161,6 @@
                                 <span class="font-mono text-muted text-truncate d-block" style="font-size: 11px;">https://35photo.pro/@emocxn/</span>
                             </div>
                         </div>
-
-                        <!-- Örnek Kart 3 -->
-                        <div class="col-md-6">
-                            <div class="result-card p-3 rounded position-relative">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <span class="font-mono fw-bold small text-info"><i class="fa-solid fa-globe me-1"></i> ARCH LINUX GITLAB</span>
-                                    <a href="#" target="_blank" class="btn btn-sm btn-outline-primary font-mono py-0 px-2" style="font-size: 11px;">Open</a>
-                                </div>
-                                <span class="font-mono d-block text-white mb-1" style="font-size: 13px;">emocxn</span>
-                                <span class="font-mono text-muted text-truncate d-block" style="font-size: 11px;">https://gitlab.archlinux.org/api/v4/users?u...</span>
-                            </div>
-                        </div>
-
-                        <!-- Örnek Kart 4 -->
-                        <div class="col-md-6">
-                            <div class="result-card p-3 rounded position-relative">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <span class="font-mono fw-bold small text-info"><i class="fa-solid fa-globe me-1"></i> ARDUINO (PROJECT HUB)</span>
-                                    <a href="#" target="_blank" class="btn btn-sm btn-outline-primary font-mono py-0 px-2" style="font-size: 11px;">Open</a>
-                                </div>
-                                <span class="font-mono d-block text-white mb-1" style="font-size: 13px;">emocxn</span>
-                                <span class="font-mono text-muted text-truncate d-block" style="font-size: 11px;">https://projecthub.arduino.cc/emocxn</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -189,50 +171,122 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Python Flask API Bridge Bağlantısı (Arka plandaki /search uç noktası ile çalışır)
-        document.getElementById('usernameSearchBtn').addEventListener('click', async () => {
-            const username = document.getElementById('usernameInput').value.trim();
+        let currentMode = 'username'; // Başlangıç modu
+
+        // Tema Değiştirici (Dark / Light Mode)
+        const themeToggle = document.getElementById('themeToggle');
+        const htmlElement = document.documentElement;
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = htmlElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            htmlElement.setAttribute('data-bs-theme', newTheme);
+            themeToggle.innerHTML = newTheme === 'dark' ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>';
+        });
+
+        // Sekme Değiştirme Mantığı
+        document.getElementById('tabUsername').addEventListener('click', () => {
+            currentMode = 'username';
+            document.getElementById('inputLabel').innerText = 'TARGET USERNAME (API BRIDGE)';
+            document.getElementById('targetInput').placeholder = 'Kullanıcı adı girin...';
+            document.getElementById('targetInput').value = 'emocxn';
+            document.getElementById('actionBtn').innerHTML = '<i class="fa-solid fa-fingerprint me-2"></i>Run Username Scan';
+        });
+
+        document.getElementById('tabIp').addEventListener('click', () => {
+            currentMode = 'ip';
+            document.getElementById('inputLabel').innerText = 'TARGET IP ADDRESS';
+            document.getElementById('targetInput').placeholder = 'Örn: 8.8.8.8 (Boş bırakırsanız kendi IP\'niz)';
+            document.getElementById('targetInput').value = '';
+            document.getElementById('actionBtn').innerHTML = '<i class="fa-solid fa-network-wired me-2"></i>Run IP Lookup';
+        });
+
+        // My IP Lookup Butonu Kısayolu
+        document.getElementById('myIpLookupBtn').addEventListener('click', () => {
+            document.getElementById('tabIp').click();
+            document.getElementById('targetInput').value = '';
+            document.getElementById('actionBtn').click();
+        });
+
+        // Ana İşlem Butonu (Username veya IP Sorgu Yönlendiricisi)
+        document.getElementById('actionBtn').addEventListener('click', async () => {
+            const val = document.getElementById('targetInput').value.trim();
             const grid = document.getElementById('resultsGrid');
-            const title = document.getElementById('resultUsernameTitle');
+            const title = document.getElementById('resultTitle');
             const countBadge = document.getElementById('resultCount');
+            const headerType = document.getElementById('resultHeaderType');
 
-            if (!username) return;
+            if (currentMode === 'username') {
+                if (!val) return;
+                title.innerText = val;
+                headerType.innerText = 'USERNAME SCAN RESULTS';
+                grid.innerHTML = '<div class="text-center py-5 font-mono text-primary"><i class="fa-solid fa-spinner fa-spin me-2"></i>Taranıyor...</div>';
 
-            title.innerText = username;
-            grid.innerHTML = '<div class="text-center py-5 font-mono text-primary"><i class="fa-solid fa-spinner fa-spin me-2"></i>Taranıyor...</div>';
+                try {
+                    const response = await fetch(`/search?username=${val}`);
+                    const data = await response.json();
 
-            try {
-                // Render üzerindeki Python Flask sunucusuna istek atar
-                const response = await fetch(`/search?username=${username}`);
-                const data = await response.json();
+                    if (data.found_sites) {
+                        grid.innerHTML = '';
+                        const entries = Object.entries(data.found_sites);
+                        countBadge.innerText = entries.length;
 
-                if (data.found_sites) {
-                    grid.innerHTML = '';
-                    const entries = Object.entries(data.found_sites);
-                    countBadge.innerText = entries.length;
+                        if (entries.length === 0) {
+                            grid.innerHTML = '<div class="text-center py-4 font-mono text-muted">Hiçbir sonuç bulunamadı.</div>';
+                            return;
+                        }
 
-                    if (entries.length === 0) {
-                        grid.innerHTML = '<div class="text-center py-4 font-mono text-muted">Hiçbir sonuç bulunamadı.</div>';
-                        return;
-                    }
-
-                    entries.forEach(([platform, url]) => {
-                        grid.innerHTML += `
-                            <div class="col-md-6">
-                                <div class="result-card p-3 rounded position-relative">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <span class="font-mono fw-bold small text-info"><i class="fa-solid fa-globe me-1"></i> ${platform.toUpperCase()}</span>
-                                        <a href="${url}" target="_blank" class="btn btn-sm btn-outline-primary font-mono py-0 px-2" style="font-size: 11px;">Open</a>
+                        entries.forEach(([platform, url]) => {
+                            grid.innerHTML += `
+                                <div class="col-md-6">
+                                    <div class="result-card p-3 rounded position-relative">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <span class="font-mono fw-bold small text-info"><i class="fa-solid fa-globe me-1"></i> ${platform.toUpperCase()}</span>
+                                            <a href="${url}" target="_blank" class="btn btn-sm btn-outline-primary font-mono py-0 px-2" style="font-size: 11px;">Open</a>
+                                        </div>
+                                        <span class="font-mono d-block text-white mb-1" style="font-size: 13px;">${val}</span>
+                                        <span class="font-mono text-muted text-truncate d-block" style="font-size: 11px;">${url}</span>
                                     </div>
-                                    <span class="font-mono d-block text-white mb-1" style="font-size: 13px;">${username}</span>
-                                    <span class="font-mono text-muted text-truncate d-block" style="font-size: 11px;">${url}</span>
+                                </div>
+                            `;
+                        });
+                    }
+                } catch (err) {
+                    grid.innerHTML = '<div class="text-center py-4 font-mono text-danger">API Bağlantı Hatası!</div>';
+                }
+
+            } else if (currentMode === 'ip') {
+                title.innerText = val || 'Kendi IP Adresiniz';
+                headerType.innerText = 'IP INTELLIGENCE RESULTS';
+                grid.innerHTML = '<div class="text-center py-5 font-mono text-primary"><i class="fa-solid fa-spinner fa-spin me-2"></i>IP Analiz Ediliyor...</div>';
+
+                try {
+                    const targetUrl = val ? `https://ipwho.is/${val}` : `https://ipwho.is/`;
+                    const response = await fetch(targetUrl);
+                    const data = await response.json();
+
+                    if (data.success) {
+                        countBadge.innerText = '1';
+                        grid.innerHTML = `
+                            <div class="col-12">
+                                <div class="result-card p-4 rounded font-mono">
+                                    <h5 class="text-success mb-3"><i class="fa-solid fa-check-circle me-2"></i>IP Bilgileri Başarıyla Çekildi</h5>
+                                    <p><strong>IP Adresi:</strong> ${data.ip}</p>
+                                    <p><strong>Tür:</strong> ${data.type}</p>
+                                    <p><strong>Ülke:</strong> ${data.country} (${data.country_code})</p>
+                                    <p><strong>Şehir:</strong> ${data.city}</p>
+                                    <p><strong>ISS (ISP):</strong> ${data.connection.isp}</p>
+                                    <p><strong>Konum:</strong> Enlem ${data.latitude}, Boylam ${data.longitude}</p>
+                                    <p><strong>Zaman Dilimi:</strong> ${data.timezone.id}</p>
                                 </div>
                             </div>
                         `;
-                    });
+                    } else {
+                        grid.innerHTML = `<div class="text-center py-4 font-mono text-danger">Hata: ${data.message}</div>`;
+                    }
+                } catch (err) {
+                    grid.innerHTML = '<div class="text-center py-4 font-mono text-danger">IP Servisine ulaşılamadı.</div>';
                 }
-            } catch (err) {
-                grid.innerHTML = '<div class="text-center py-4 font-mono text-danger">API Bağlantı Hatası! Flask sunucusunu kontrol edin.</div>';
             }
         });
     </script>
