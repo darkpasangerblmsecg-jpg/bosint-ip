@@ -4,9 +4,8 @@ import requests
 import os
 
 app = Flask(__name__)
-CORS(app)  # Arayüzün farklı bir porttan/domainden istek atabilmesi için CORS aktif edilir
+CORS(app)
 
-# Örnek popüler platformlar ve kontrol linkleri (Username OSINT mantığı)
 SUPPORTED_PLATFORMS = {
     "GitHub": "https://github.com/{}",
     "Instagram": "https://www.instagram.com/{}",
@@ -32,14 +31,10 @@ def search_username():
     for platform, url_template in SUPPORTED_PLATFORMS.items():
         target_url = url_template.format(username)
         try:
-            # Siteleri kontrol et (Timeout süresi kısa tutulur ki hızlı yanıt dönsün)
             response = requests.get(target_url, headers=headers, timeout=5)
-            
-            # Genellikle 200 dönüyorsa profil mevcuttur (Platforma göre özelleştirilebilir)
             if response.status_code == 200:
                 found_sites[platform] = target_url
         except requests.exceptions.RequestException:
-            # Bağlantı hatası veya zaman aşımı durumunda pas geçilir
             continue
 
     return jsonify({
@@ -47,9 +42,45 @@ def search_username():
         "found_sites": found_sites
     })
 
+# Telefon numarası sorgulama API uç noktası (İsim, Soyisim ve Operatör döner)
+@app.route('/search-phone', methods=['GET'])
+def search_phone():
+    phone = request.args.get('phone')
+    if not phone:
+        return jsonify({"error": "Telefon numarası gereklidir."}), 400
+
+    # Örnek Veritabanı / Simülasyon Verisi (Burayı kendi veri kaynağınla değiştirebilirsin)
+    # İleride buraya SQL veya büyük bir JSON/CSV okuma entegre edebilirsin.
+    mock_database = {
+        "+905554443322": {
+            "name": "Eymen Abdullah",
+            "operator": "Vodafone",
+            "city": "İstanbul",
+            "source": "Breach Database v4"
+        }
+    }
+
+    # Numarayı veritabanında ara (Boşlukları temizleyerek)
+    clean_phone = phone.strip()
+    if clean_phone in mock_database:
+        data = mock_database[clean_phone]
+        return jsonify({
+            "found": True,
+            "phone": clean_phone,
+            "full_name": data["name"],
+            "operator": data["operator"],
+            "city": data["city"],
+            "source": data["source"]
+        })
+    else:
+        return jsonify({
+            "found": False,
+            "phone": clean_phone,
+            "message": "Bu numaraya ait sızıntı/kayıt bulunamadı."
+        })
+
 @app.route('/', methods=['GET'])
 def home():
-    # Artık ana dizine girildiğinde doğrudan index.html arayüzünü sunar
     return send_from_directory(os.path.dirname(os.path.abspath(__file__)), 'index.html')
 
 if __name__ == '__main__':
