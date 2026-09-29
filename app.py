@@ -9,7 +9,7 @@ LOCAL_CONTACTS = {
 
 
 @app.route("/")
-def index():
+def index():  # <-- BURAYA 'def' EKLENDİ
     return render_template("index.html")
 
 
