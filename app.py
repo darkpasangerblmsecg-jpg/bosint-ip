@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
-import asyncio
-from holehe.core import import_submodules, check_mail
+import subprocess
+import json
 
 app = Flask(__name__)
 CORS(app)
@@ -65,7 +65,7 @@ def search_username():
     }
     return jsonify({"found_sites": found_sites})
 
-# 3. Holehe E-posta İstihbarat Modülü (Gerçek Canlı Tarama)
+# 3. Holehe E-posta İstihbarat Modülü (Subprocess ile Canlı Tarama)
 @app.route("/search-email", methods=["POST"])
 def search_email():
     data = request.get_json() or {}
@@ -75,26 +75,37 @@ def search_email():
         return jsonify({"success": False, "error": "E-posta adresi gerekli"}), 400
 
     try:
-        modules = import_submodules("holehe.modules")
-        client_list = [mod for mod in modules if hasattr(mod, "check")]
-
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        # Holehe'yi komut satırı üzerinden çalıştırıp JSON çıktısını alıyoruz
+        process = subprocess.run(
+            ['holehe', email, '--no-color', '--json'],
+            capture_output=True,
+            text=True,
+            timeout=60
+        )
         
-        async def run_checks():
-            out = []
-            await check_mail(client_list, email, out)
-            return out
-
-        results = loop.run_until_complete(run_checks())
-        registered_services = [r for r in results if r.get("exists") == True]
+        registered_services = []
+        output_lines = process.stdout.splitlines()
+        
+        for line in output_lines:
+            try:
+                res = json.loads(line)
+                if res.get("exists") == True:
+                    registered_services.append({
+                        "name": res.get("name"),
+                        "domain": res.get("domain", "")
+                    })
+            except json.JSONDecodeError:
+                continue
 
         return jsonify({
             "success": True,
             "email": email,
-            "total_checked": len(results),
+            "total_checked": len(output_lines),
             "registered": registered_services
         })
+        
+    except subprocess.TimeoutExpired:
+        return jsonify({"success": False, "error": "Tarama zaman aşımına uğradı."}), 500
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
