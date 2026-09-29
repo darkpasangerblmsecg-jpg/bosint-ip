@@ -2,46 +2,38 @@ from flask import Flask, jsonify, render_template, request
 
 app = Flask(__name__)
 
+# İsteğe bağlı lokal rehber (Burayı tamamen boş bırakabilir veya kendi düzgün kayıtlarını ekleyebilirsin)
+LOCAL_CONTACTS = {
+    # "+905554443322": ["Örnek Ad Soyad"],
+}
+
 
 @app.route("/")
 def index():
   return render_template("index.html")
 
 
-# 1. Gelişmiş IP İstihbarat & Tehdit Analiz Modülü
-@app.route("/search-ip")
-def search_ip():
-  ip = request.args.get("ip", "").strip()
-
-  # IP belirtilmemişse örnek/simüle edilmiş lokal IP verisi dönebiliriz
-  target_ip = ip if ip else "8.8.8.8"
-
-  return jsonify({
-      "success": True,
-      "ip": target_ip,
-      "type": "IPv4 / Anycast Network",
-      "country": "United States",
-      "country_code": "US",
-      "city": "Mountain View, California",
-      "connection": {
-          "isp": "Google LLC / Cloud Infrastructure",
-          "asn": "15169",
-          "org": "GOOGLE",
-      },
-      "threat_status": "Temiz (Blacklist / Abuse Kaydı Yok)",
-      "latitude": 37.4056,
-      "longitude": -122.0775,
-      "timezone": {"id": "America/Los_Angeles", "offset": "-7 hours"},
-  })
-
-
-# 2. Gelişmiş Telefon İstihbarat Modülü
+# 1. Telefon ve Lokal Rehber İstihbarat Modülü
 @app.route("/search-phone")
 def search_phone():
   phone = request.args.get("phone", "").strip()
 
   if not phone:
     return jsonify({"found": False, "message": "Numara girilmedi."})
+
+  saved_names = LOCAL_CONTACTS.get(phone, [])
+
+  if saved_names:
+    return jsonify({
+        "found": True,
+        "phone": phone,
+        "full_name": " / ".join(saved_names),
+        "operator": "Lokal Rehber Eşleşmesi",
+        "line_type": "Kayıtlı Kişi",
+        "location": "Türkiye / Rehber Kaydı",
+        "timezone": "Europe/Istanbul (UTC+3)",
+        "source": "Lokal Rehber",
+    })
 
   if phone.startswith("+90") or phone.startswith("90") or phone.startswith("0"):
     return jsonify({
@@ -52,7 +44,7 @@ def search_phone():
         "line_type": "Mobil (GSM / LTE)",
         "location": "Türkiye / İstanbul, Marmara Bölgesi",
         "timezone": "Europe/Istanbul (UTC+3)",
-        "source": "Global HLR Lookup & Telecom Registry v4.4-PRO",
+        "source": "Global HLR Lookup & Telecom Registry",
     })
   else:
     return jsonify({
@@ -67,7 +59,7 @@ def search_phone():
     })
 
 
-# 3. Sosyal Medya / Kullanıcı Adı Tarama Modülü
+# 2. Sosyal Medya / Kullanıcı Adı Tarama Modülü
 @app.route("/search")
 def search_username():
   username = request.args.get("username", "").strip()
