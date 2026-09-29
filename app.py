@@ -2,6 +2,7 @@ from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
 import subprocess
 import json
+import os
 
 app = Flask(__name__)
 CORS(app)
@@ -46,23 +47,36 @@ def search_phone():
             "source": "International Telecom Database"
         })
 
-# 2. Sosyal Medya / Kullanıcı Adı Tarama Modülü
+# 2. Sosyal Medya / Kullanıcı Adı Tarama Modülü (sites.json Destekli)
 @app.route("/search")
 def search_username():
     username = request.args.get("username", "").strip()
     if not username:
         return jsonify({"found_sites": {}})
 
-    found_sites = {
-        "github": f"https://github.com/{username}",
-        "instagram": f"https://instagram.com/{username}",
-        "twitter / x": f"https://twitter.com/{username}",
-        "telegram": f"https://t.me/{username}",
-        "reddit": f"https://www.reddit.com/user/{username}",
-        "steam": f"https://steamcommunity.com/id/{username}",
-        "tiktok": f"https://www.tiktok.com/@{username}",
-        "pinterest": f"https://pinterest.com/{username}",
-    }
+    json_path = os.path.join(os.path.dirname(__file__), "sites.json")
+    found_sites = {}
+
+    try:
+        if os.path.exists(json_path):
+            with open(json_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                for site in data.get("sites", []):
+                    name = site.get("name")
+                    uri_template = site.get("uri_check")
+                    # {account} veya {username} etiketlerini gelen kullanıcı adı ile değiştiriyoruz
+                    url = uri_template.replace("{account}", username).replace("{username}", username)
+                    found_sites[name] = url
+        else:
+            # Fallback (Eğer JSON bulunamazsa)
+            found_sites = {
+                "GitHub": f"https://github.com/{username}",
+                "Instagram": f"https://instagram.com/{username}",
+                "Twitter / X": f"https://twitter.com/{username}"
+            }
+    except Exception as e:
+        print(f"Hata: {e}")
+
     return jsonify({"found_sites": found_sites})
 
 # 3. Holehe E-posta İstihbarat Modülü (Subprocess ile Canlı Tarama)
@@ -110,5 +124,5 @@ def search_email():
         return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == "__main__":
-    print("[+] BosINT v4.7-PRO Full-Stack Backend Çalıştırılıyor...")
+    print("[+] Nexus OSINT v4.7-PRO Full-Stack Backend Çalıştırılıyor...")
     app.run(debug=True, port=5000)

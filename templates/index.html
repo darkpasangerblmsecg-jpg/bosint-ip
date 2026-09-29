@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OSINT & İstihbarat Paneli</title>
+    <title>CRYPTA OSINT</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -23,7 +23,7 @@
                     <i class="fa-solid fa-shield-halved text-xl"></i>
                 </div>
                 <div>
-                    <h1 class="font-bold text-lg tracking-wide bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">NEXUS OSINT</h1>
+                    <h1 class="font-bold text-lg tracking-wide bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">CRYPTA OSINT</h1>
                     <p class="text-xs text-slate-400">Gelişmiş Tehdit ve İstihbarat Analiz Sistemi</p>
                 </div>
             </div>
@@ -137,6 +137,8 @@
 
     <!-- JavaScript İşlevselliği -->
     <script>
+        let lastResultData = null;
+
         const moduleConfigs = {
             phone: { label: "Telefon Numarası (Örn: +90555...)", placeholder: "+905551234567", icon: "fa-phone" },
             username: { label: "Kullanıcı Adı (Target Username)", placeholder: "johndoe", icon: "fa-user" },
@@ -162,7 +164,7 @@
         async function handleSearch(event) {
             event.preventDefault();
             const module = document.getElementById('active-module').value;
-            const query = document.getElementById('query-input').value;
+            const query = document.getElementById('query-input').value.trim();
 
             document.getElementById('empty-state').classList.add('hidden');
             document.getElementById('results-container').classList.add('hidden');
@@ -171,37 +173,88 @@
             document.getElementById('loading-state').classList.remove('hidden');
 
             try {
-                // Backend endpoint yapınıza göre burayı güncelleyebilirsiniz (Örn: /api/search)
-                const response = await fetch('/search', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ module, query })
-                });
-                const data = await response.json();
+                let response, data;
 
-                renderResults(data);
+                if (module === 'phone') {
+                    response = await fetch(`/search-phone?phone=${encodeURIComponent(query)}`);
+                    data = await response.json();
+                    lastResultData = data;
+                    renderPhoneResults(data);
+                } else if (module === 'username') {
+                    response = await fetch(`/search?username=${encodeURIComponent(query)}`);
+                    data = await response.json();
+                    lastResultData = data;
+                    renderUsernameResults(data);
+                } else if (module === 'email') {
+                    response = await fetch('/search-email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: query })
+                    });
+                    data = await response.json();
+                    lastResultData = data;
+                    renderEmailResults(data);
+                } else {
+                    setTimeout(() => {
+                        const mockData = { results: [{ platform: "Genel Bilgi", details: `${module.toUpperCase()} modülü için simülasyon sonuç: ${query}`, url: "" }] };
+                        lastResultData = mockData;
+                        renderGenericResults(mockData);
+                    }, 600);
+                }
             } catch (error) {
                 console.error("Hata:", error);
-                // Demo/Test amaçlı örnek statik sonuç üretme (Backend bağlantısı yoksa test için)
-                renderDemoResults(module, query);
+                document.getElementById('loading-state').classList.add('hidden');
+                alert("Sunucu bağlantısı sırasında bir hata oluştu.");
             }
         }
 
-        function renderResults(data) {
+        function renderPhoneResults(data) {
             document.getElementById('loading-state').classList.add('hidden');
             const container = document.getElementById('results-container');
             container.innerHTML = '';
-            
-            // Veri yapısına göre listeleme
-            const results = data.results || [];
-            document.getElementById('record-count').innerText = results.length;
+
+            if (!data.found) {
+                container.innerHTML = `<div class="text-center py-10 text-slate-500 text-sm">${data.message || 'Kayıt bulunamadı.'}</div>`;
+            } else {
+                document.getElementById('record-count').innerText = "1";
+                document.getElementById('result-meta').classList.remove('hidden');
+                document.getElementById('result-actions').classList.remove('hidden');
+
+                container.innerHTML = `
+                    <div class="bg-slate-950/60 border border-slate-800/80 rounded-xl p-4 space-y-2">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                            <span class="text-xs font-semibold text-blue-400">${data.source || 'Telefon İstihbaratı'}</span>
+                            <span class="text-xs bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">${data.line_type}</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+                            <div><span class="text-slate-500">Ad / Statü:</span> <span class="text-slate-200 font-medium">${data.full_name}</span></div>
+                            <div><span class="text-slate-500">Operatör:</span> <span class="text-slate-200 font-medium">${data.operator}</span></div>
+                            <div><span class="text-slate-500">Lokasyon:</span> <span class="text-slate-200 font-medium">${data.location}</span></div>
+                            <div><span class="text-slate-500">Zaman Dilimi:</span> <span class="text-slate-200 font-medium">${data.timezone}</span></div>
+                        </div>
+                    </div>
+                `;
+            }
+            container.classList.remove('hidden');
+        }
+
+        function renderUsernameResults(data) {
+            document.getElementById('loading-state').classList.add('hidden');
+            const container = document.getElementById('results-container');
+            container.innerHTML = '';
+
+            const sites = data.found_sites || {};
+            const keys = Object.keys(sites);
+
+            document.getElementById('record-count').innerText = keys.length;
             document.getElementById('result-meta').classList.remove('hidden');
             document.getElementById('result-actions').classList.remove('hidden');
 
-            if(results.length === 0) {
-                container.innerHTML = '<div class="text-center py-10 text-slate-500 text-sm">Sonuç bulunamadı.</div>';
+            if (keys.length === 0) {
+                container.innerHTML = '<div class="text-center py-10 text-slate-500 text-sm">Eşleşen platform bulunamadı.</div>';
             } else {
-                results.forEach(item => {
+                keys.forEach(site => {
+                    const url = sites[site];
                     container.innerHTML += `
                         <div class="bg-slate-950/60 border border-slate-800/80 rounded-xl p-4 flex items-center justify-between hover:border-slate-700 transition-all">
                             <div class="flex items-center space-x-3">
@@ -209,11 +262,13 @@
                                     <i class="fa-solid fa-check text-xs"></i>
                                 </div>
                                 <div>
-                                    <h4 class="text-sm font-semibold text-slate-200">${item.platform || 'Kaynak'}</h4>
-                                    <p class="text-xs text-slate-400 mono mt-0.5">${item.details || item.url}</p>
+                                    <h4 class="text-sm font-semibold text-slate-200 capitalize">${site}</h4>
+                                    <p class="text-xs text-slate-400 mono mt-0.5">${url}</p>
                                 </div>
                             </div>
-                            ${item.url ? `<a href="${item.url}" target="_blank" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-blue-400 rounded-lg text-xs font-medium transition-all flex items-center space-x-1"><span>Git</span><i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>` : ''}
+                            <a href="${url}" target="_blank" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-blue-400 rounded-lg text-xs font-medium transition-all flex items-center space-x-1">
+                                <span>Git</span><i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                            </a>
                         </div>
                     `;
                 });
@@ -221,22 +276,79 @@
             container.classList.remove('hidden');
         }
 
-        function renderDemoResults(module, query) {
-            // Backend henüz bağlanmadıysa arayüzün test edilebilmesi için sahte veri
-            setTimeout(() => {
-                const mockData = {
-                    results: [
-                        { platform: "GitHub", details: `Kullanıcı profili eşleşti: @${query}`, url: "https://github.com" },
-                        { platform: "Twitter / X", details: `Hesap aktif durumda`, url: "https://twitter.com" },
-                        { platform: "Instagram", details: `Gizli profil tespiti`, url: "https://instagram.com" }
-                    ]
-                };
-                renderResults(mockData);
-            }, 800);
+        function renderEmailResults(data) {
+            document.getElementById('loading-state').classList.add('hidden');
+            const container = document.getElementById('results-container');
+            container.innerHTML = '';
+
+            if (!data.success) {
+                container.innerHTML = `<div class="text-center py-10 text-red-400 text-sm">${data.error || 'Tarama başarısız oldu.'}</div>`;
+                container.classList.remove('hidden');
+                return;
+            }
+
+            const registered = data.registered || [];
+            document.getElementById('record-count').innerText = registered.length;
+            document.getElementById('result-meta').classList.remove('hidden');
+            document.getElementById('result-actions').classList.remove('hidden');
+
+            if (registered.length === 0) {
+                container.innerHTML = '<div class="text-center py-10 text-slate-500 text-sm">Bu e-posta ile kayıtlı servis bulunamadı.</div>';
+            } else {
+                registered.forEach(item => {
+                    container.innerHTML += `
+                        <div class="bg-slate-950/60 border border-slate-800/80 rounded-xl p-4 flex items-center justify-between hover:border-slate-700 transition-all">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                                    <i class="fa-solid fa-shield-check text-xs"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-semibold text-slate-200">${item.name}</h4>
+                                    <p class="text-xs text-slate-400 mono mt-0.5">${item.domain || ''}</p>
+                                </div>
+                            </div>
+                            <span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg text-xs font-medium">Kayıtlı</span>
+                        </div>
+                    `;
+                });
+            }
+            container.classList.remove('hidden');
+        }
+
+        function renderGenericResults(data) {
+            document.getElementById('loading-state').classList.add('hidden');
+            const container = document.getElementById('results-container');
+            container.innerHTML = '';
+            const results = data.results || [];
+            document.getElementById('record-count').innerText = results.length;
+            document.getElementById('result-meta').classList.remove('hidden');
+            document.getElementById('result-actions').classList.remove('hidden');
+
+            results.forEach(item => {
+                container.innerHTML += `
+                    <div class="bg-slate-950/60 border border-slate-800/80 rounded-xl p-4 flex items-center justify-between">
+                        <div>
+                            <h4 class="text-sm font-semibold text-slate-200">${item.platform}</h4>
+                            <p class="text-xs text-slate-400 mono mt-0.5">${item.details}</p>
+                        </div>
+                    </div>
+                `;
+            });
+            container.classList.remove('hidden');
         }
 
         function exportJSON() {
-            alert("Sonuçlar JSON olarak dışa aktarılıyor...");
+            if (!lastResultData) {
+                alert("İndirilecek veri bulunmuyor.");
+                return;
+            }
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(lastResultData, null, 4));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "crypta_osint_report.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
         }
     </script>
 </body>
