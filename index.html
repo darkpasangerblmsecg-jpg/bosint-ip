@@ -189,7 +189,7 @@
             currentMode = 'ip';
             setActiveTab('tabIp');
             document.getElementById('inputLabel').innerText = 'TARGET IP ADDRESS';
-            document.getElementById('targetInput').placeholder = 'Örn: 8.8.8.8 (Boş bırakırsanız kendi IP\'niz)';
+            document.getElementById('targetInput').placeholder = "Örn: 8.8.8.8 (Boş bırakırsanız kendi IP'niz)";
             document.getElementById('targetInput').value = '';
             document.getElementById('actionBtn').innerHTML = '<i class="fa-solid fa-network-wired me-2"></i>Run IP Lookup';
         });
@@ -225,7 +225,7 @@
             const countBadge = document.getElementById('resultCount');
             const headerType = document.getElementById('resultHeaderType');
 
-            // 1. PHONE MODU (GÜNCELLENDİ)
+            // 1. PHONE MODU
             if (currentMode === 'phone') {
                 if (!val) return;
                 title.innerText = val;
