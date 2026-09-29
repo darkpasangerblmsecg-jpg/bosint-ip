@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="tr" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BosINT v4.4-PRO</title>
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bs-body-font-family: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+        body {
+            font-family: var(--bs-body-font-family);
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+            transition: background-color 0.3s ease;
+        }
+        .font-mono {
+            font-family: var(--font-mono);
+        }
+        .navbar-custom {
+            background-color: var(--bs-tertiary-bg);
+            border-bottom: 1px solid var(--bs-border-color);
+        }
+        .card {
+            background-color: var(--bs-tertiary-bg);
+            border: 1px solid var(--bs-border-color);
+        }
+        .form-control {
+            background-color: var(--bs-body-bg);
+            border: 1px solid var(--bs-border-color);
+            color: var(--bs-body-color);
+        }
+        .form-control:focus {
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+            border-color: #3b82f6;
+            box-shadow: none;
+        }
+        .result-card {
+            background-color: var(--bs-body-bg);
+            border: 1px solid var(--bs-border-color);
+            transition: all 0.2s;
+        }
+        .result-card:hover {
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Navbar -->
+    <nav class="navbar navbar-expand navbar-custom px-4 py-2">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+                <div class="bg-primary p-2 rounded text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                    <i class="fa-solid fa-shield-halved fa-sm"></i>
+                </div>
+                <span class="fw-bold font-mono fs-5">BosINT</span>
+                <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 font-mono" style="font-size: 10px;">v4.4-PRO</span>
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 font-mono py-2 px-3">
+                    <i class="fa-solid fa-circle fa-2xs me-1"></i> System Online • All Modules Active
+                </span>
+                <button id="themeToggle" class="btn btn-sm btn-outline-secondary border-secondary">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+                <button id="myIpLookupBtn" class="btn btn-sm btn-primary font-mono fw-bold">
+                    <i class="fa-solid fa-user-shield me-1"></i> My IP Lookup
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container-fluid p-4">
+        <div class="row g-4">
+            
+            <!-- Left Panel / Controls -->
+            <div class="col-lg-4">
+                <!-- Navigation Tabs -->
+                <div class="card p-3 mb-4">
+                    <div class="d-flex gap-2 mb-3">
+                        <button id="tabUsername" class="btn btn-sm btn-outline-secondary text-white border-0 flex-fill font-mono"><i class="fa-solid fa-user-secret me-1"></i> User</button>
+                        <button id="tabIp" class="btn btn-sm btn-outline-secondary text-white border-0 flex-fill font-mono"><i class="fa-solid fa-network-wired me-1"></i> IP</button>
+                        <button id="tabDomain" class="btn btn-sm btn-outline-secondary text-white border-0 flex-fill font-mono"><i class="fa-solid fa-globe me-1"></i> Domain</button>
+                        <button id="tabPhone" class="btn btn-sm btn-primary flex-fill font-mono fw-bold"><i class="fa-solid fa-phone me-1"></i> Phone</button>
+                    </div>
+
+                    <!-- Input Alanı -->
+                    <div id="inputSection">
+                        <label class="form-label font-mono small text-muted" id="inputLabel">TARGET PHONE NUMBER</label>
+                        <div class="input-group mb-3">
+                            <input type="text" id="targetInput" class="form-control font-mono" value="+905554443322">
+                            <button class="btn btn-outline-secondary" type="button" id="clearInputBtn"><i class="fa-regular fa-copy"></i></button>
+                        </div>
+                        <button id="actionBtn" class="btn btn-primary w-100 font-mono fw-bold py-2">
+                            <i class="fa-solid fa-magnifying-glass me-2"></i>Run Lookup
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Query History -->
+                <div class="card p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="font-mono small text-muted"><i class="fa-solid fa-clock-rotate-left me-1"></i> QUERY HISTORY</span>
+                        <i class="fa-solid fa-trash-can text-muted" style="cursor: pointer; font-size: 12px;" onclick="document.getElementById('historyBox').innerHTML=''"></i>
+                    </div>
+                    <div id="historyBox">
+                        <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2" style="background-color: var(--bs-body-bg);">
+                            <span class="font-mono text-primary small"><i class="fa-solid fa-chevron-right fa-2xs me-2"></i>System Started</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-muted" style="font-size: 12px;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel / Results -->
+            <div class="col-lg-8">
+                <div class="card p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <span class="font-mono small text-muted d-block mb-1" id="resultHeaderType">INTELLIGENCE RESULTS</span>
+                            <h3 class="font-mono fw-bold text-primary m-0" id="resultTitle">Sistem Hazır</h3>
+                        </div>
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 font-mono px-3 py-2">
+                            Durum: <span id="resultCount">Aktif</span>
+                        </span>
+                    </div>
+
+                    <hr class="border-secondary opacity-25 mb-4">
+
+                    <!-- Results Grid -->
+                    <div class="row g-3" id="resultsGrid">
+                        <div class="col-12 text-center py-5 font-mono text-muted">
+                            <i class="fa-solid fa-terminal fa-2x mb-2 text-primary"></i>
+                            <p>Sol menüden bir modül seçip sorgu başlatın.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentMode = 'phone';
+
+        const themeToggle = document.getElementById('themeToggle');
+        const htmlElement = document.documentElement;
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = htmlElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            htmlElement.setAttribute('data-bs-theme', newTheme);
+            themeToggle.innerHTML = newTheme === 'dark' ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>';
+        });
+
+        function setActiveTab(activeBtnId) {
+            ['tabUsername', 'tabIp', 'tabDomain', 'tabPhone'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (id === activeBtnId) {
+                    btn.className = 'btn btn-sm btn-primary flex-fill font-mono fw-bold';
+                } else {
+                    btn.className = 'btn btn-sm btn-outline-secondary text-white border-0 flex-fill font-mono';
+                }
+            });
+        }
+
+        document.getElementById('tabUsername').addEventListener('click', () => {
+            currentMode = 'username';
+            setActiveTab('tabUsername');
+            document.getElementById('inputLabel').innerText = 'TARGET USERNAME';
+            document.getElementById('targetInput').placeholder = 'Kullanıcı adı girin...';
+            document.getElementById('targetInput').value = 'emocxn';
+            document.getElementById('actionBtn').innerHTML = '<i class="fa-solid fa-fingerprint me-2"></i>Run Username Scan';
+        });
+
+        document.getElementById('tabIp').addEventListener('click', () => {
+            currentMode = 'ip';
+            setActiveTab('tabIp');
+            document.getElementById('inputLabel').innerText = 'TARGET IP ADDRESS';
+            document.getElementById('targetInput').placeholder = "Örn: 8.8.8.8 (Boş bırakırsanız kendi IP'niz)";
+            document.getElementById('targetInput').value = '';
+            document.getElementById('actionBtn').innerHTML = '<i class="fa-solid fa-network-wired me-2"></i>Run IP Lookup';
+        });
+
+        document.getElementById('tabDomain').addEventListener('click', () => {
+            currentMode = 'domain';
+            setActiveTab('tabDomain');
+            document.getElementById('inputLabel').innerText = 'TARGET DOMAIN';
+            document.getElementById('targetInput').placeholder = 'Örn: google.com';
+            document.getElementById('targetInput').value = 'google.com';
+            document.getElementById('actionBtn').innerHTML = '<i class="fa-solid fa-globe me-2"></i>Run Domain Lookup';
+        });
+
+        document.getElementById('tabPhone').addEventListener('click', () => {
+            currentMode = 'phone';
+            setActiveTab('tabPhone');
+            document.getElementById('inputLabel').innerText = 'TARGET PHONE NUMBER';
+            document.getElementById('targetInput').placeholder = 'Örn: +905554443322';
+            document.getElementById('targetInput').value = '+905554443322';
+            document.getElementById('actionBtn').innerHTML = '<i class="fa-solid fa-magnifying-glass me-2"></i>Run Phone Lookup';
+        });
+
+        document.getElementById('myIpLookupBtn').addEventListener('click', () => {
+            document.getElementById('tabIp').click();
+            document.getElementById('targetInput').value = '';
+            document.getElementById('actionBtn').click();
+        });
+
+        document.getElementById('actionBtn').addEventListener('click', async () => {
+            const val = document.getElementById('targetInput').value.trim();
+            const grid = document.getElementById('resultsGrid');
+            const title = document.getElementById('resultTitle');
+            const countBadge = document.getElementById('resultCount');
+            const headerType = document.getElementById('resultHeaderType');
+
+            // 1. PHONE MODU
+            if (currentMode === 'phone') {
+                if (!val) return;
+                title.innerText = val;
+                headerType.innerText = 'PHONE INTELLIGENCE RESULTS';
+                grid.innerHTML = '<div class="text-center py-5 font-mono text-primary"><i class="fa-solid fa-spinner fa-spin me-2"></i>Global Telekom Veritabanı Taranıyor...</div>';
+
+                try {
+                    const response = await fetch(`/search-phone?phone=${encodeURIComponent(val)}`);
+                    const data = await response.json();
+
+                    if (data.found) {
+                        countBadge.innerText = 'Analiz Başarılı';
+                        grid.innerHTML = `
+                            <div class="col-12">
+                                <div class="result-card p-4 rounded font-mono">
+                                    <h5 class="text-success mb-3"><i class="fa-solid fa-satellite-dish me-2"></i>Global Telecom & Metadata Sonucu</h5>
+                                    <p class="mb-2"><strong>Uluslararası Format:</strong> ${data.phone}</p>
+                                    <p class="mb-2"><strong>Abone Durumu:</strong> <span class="text-warning fw-bold">${data.full_name}</span></p>
+                                    <p class="mb-2"><strong>Operatör:</strong> ${data.operator}</p>
+                                    <p class="mb-2"><strong>Hat Tipi:</strong> ${data.line_type}</p>
+                                    <p class="mb-2"><strong>Bölge / Konum:</strong> ${data.location}</p>
+                                    <p class="mb-2"><strong>Zaman Dilimi:</strong> ${data.timezone}</p>
+                                    <p class="mb-0"><strong>Motor Kaynağı:</strong> ${data.source}</p>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        countBadge.innerText = 'Geçersiz Numara';
+                        grid.innerHTML = `
+                            <div class="col-12">
+                                <div class="result-card p-4 rounded font-mono text-center text-muted">
+                                    <i class="fa-solid fa-circle-exclamation fa-2x mb-2 text-warning"></i>
+                                    <p class="mb-0">${data.message}</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                } catch (err) {
+                    grid.innerHTML = '<div class="text-center py-4 font-mono text-danger">Sunucu bağlantı hatası!</div>';
+                }
+            } 
+            
+            // 2. IP MODU
+            else if (currentMode === 'ip') {
+                title.innerText = val || 'Kendi IP Adresiniz';
+                headerType.innerText = 'IP INTELLIGENCE RESULTS';
+                grid.innerHTML = '<div class="text-center py-5 font-mono text-primary"><i class="fa-solid fa-spinner fa-spin me-2"></i>IP Analiz Ediliyor...</div>';
+
+                try {
+                    const targetUrl = val ? `https://ipwho.is/${val}` : `https://ipwho.is/`;
+                    const response = await fetch(targetUrl);
+                    const data = await response.json();
+
+                    if (data.success) {
+                        countBadge.innerText = 'Başarılı';
+                        const mapUrl = `https://www.google.com/maps/search/?api=1&query=${data.latitude},${data.longitude}`;
+
+                        grid.innerHTML = `
+                            <div class="col-12">
+                                <div class="result-card p-4 rounded font-mono">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="text-success m-0"><i class="fa-solid fa-check-circle me-2"></i>IP Bilgileri Çekildi</h5>
+                                        <a href="${mapUrl}" target="_blank" class="btn btn-sm btn-outline-info font-mono">
+                                            <i class="fa-solid fa-map-location-dot me-1"></i> Haritada Göster
+                                        </a>
+                                    </div>
+                                    <p class="mb-2"><strong>IP Adresi:</strong> ${data.ip}</p>
+                                    <p class="mb-2"><strong>Tür:</strong> ${data.type}</p>
+                                    <p class="mb-2"><strong>Ülke:</strong> ${data.country} (${data.country_code})</p>
+                                    <p class="mb-2"><strong>Şehir:</strong> ${data.city}</p>
+                                    <p class="mb-2"><strong>ISS (ISP):</strong> ${data.connection.isp}</p>
+                                    <p class="mb-2"><strong>Konum:</strong> Enlem ${data.latitude}, Boylam ${data.longitude}</p>
+                                    <p class="mb-0"><strong>Zaman Dilimi:</strong> ${data.timezone.id}</p>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        countBadge.innerText = 'Hata';
+                        grid.innerHTML = `<div class="text-center py-4 font-mono text-danger">Hata: ${data.message}</div>`;
+                    }
+                } catch (err) {
+                    grid.innerHTML = '<div class="text-center py-4 font-mono text-danger">IP Servisine ulaşılamadı.</div>';
+                }
+            } 
+            
+            // 3. DOMAIN MODU
+            else if (currentMode === 'domain') {
+                if (!val) return;
+                title.innerText = val;
+                headerType.innerText = 'DOMAIN INTELLIGENCE RESULTS';
+                grid.innerHTML = '<div class="text-center py-5 font-mono text-primary"><i class="fa-solid fa-spinner fa-spin me-2"></i>Domain DNS Kayıtları Sorgulanıyor...</div>';
+
+                try {
+                    const response = await fetch(`https://dns.google/resolve?name=${val}&type=A`);
+                    const data = await response.json();
+
+                    let recordsHtml = '';
+                    if (data.Answer) {
+                        data.Answer.forEach(rec => {
+                            recordsHtml += `<p class="mb-1"><strong>Kayıt Tipi (${rec.type}):</strong> ${rec.data} (TTL: ${rec.TTL})</p>`;
+                        });
+                    } else {
+                        recordsHtml = '<p class="text-muted">A kayıt bulunamadı veya domain aktif değil.</p>';
+                    }
+
+                    countBadge.innerText = data.Answer ? data.Answer.length + ' Kayıt' : '0 Kayıt';
+                    grid.innerHTML = `
+                        <div class="col-12">
+                            <div class="result-card p-4 rounded font-mono">
+                                <h5 class="text-info mb-3"><i class="fa-solid fa-globe me-2"></i>DNS / Domain Bilgileri (${val})</h5>
+                                <p class="mb-2"><strong>Sorgu Durumu:</strong> Başarılı (Status: ${data.Status === 0 ? 'NOERROR' : 'Error'})</p>
+                                <hr class="border-secondary opacity-25">
+                                <div class="mt-3">
+                                    <h6 class="text-muted small mb-2">Çözümlenen Sunucu IP Adresleri (A Records):</h6>
+                                    ${recordsHtml}
+                                </div>
+                                <div class="mt-4">
+                                    <a href="https://who.is/whois/${val}" target="_blank" class="btn btn-sm btn-outline-primary font-mono">
+                                        <i class="fa-solid fa-external-link-alt me-1"></i> Detaylı Whois Raporuna Git
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } catch (err) {
+                    grid.innerHTML = '<div class="text-center py-4 font-mono text-danger">Domain sorgulama servisine ulaşılamadı.</div>';
+                }
+            } 
+            
+            // 4. USERNAME MODU
+            else if (currentMode === 'username') {
+                if (!val) return;
+                title.innerText = val;
+                headerType.innerText = 'USERNAME SCAN RESULTS';
+                grid.innerHTML = '<div class="text-center py-5 font-mono text-primary"><i class="fa-solid fa-spinner fa-spin me-2"></i>Sosyal Medya Taranıyor...</div>';
+
+                try {
+                    const response = await fetch(`/search?username=${encodeURIComponent(val)}`);
+                    const data = await response.json();
+                    if (data.found_sites) {
+                        grid.innerHTML = '';
+                        const entries = Object.entries(data.found_sites);
+                        countBadge.innerText = entries.length + ' Sonuç';
+
+                        if (entries.length === 0) {
+                            grid.innerHTML = '<div class="text-center py-4 font-mono text-muted">Hiçbir platformda bulunamadı.</div>';
+                            return;
+                        }
+
+                        entries.forEach(([platform, url]) => {
+                            grid.innerHTML += `
+                                <div class="col-md-6">
+                                    <div class="result-card p-3 rounded position-relative">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <span class="font-mono fw-bold small text-info"><i class="fa-solid fa-globe me-1"></i> ${platform.toUpperCase()}</span>
+                                            <a href="${url}" target="_blank" class="btn btn-sm btn-outline-primary font-mono py-0 px-2" style="font-size: 11px;">Open</a>
+                                        </div>
+                                        <span class="font-mono d-block text-white mb-1" style="font-size: 13px;">${val}</span>
+                                        <span class="font-mono text-muted text-truncate d-block" style="font-size: 11px;">${url}</span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                } catch (err) {
+                    grid.innerHTML = '<div class="text-center py-4 font-mono text-danger">API Bağlantı Hatası!</div>';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
