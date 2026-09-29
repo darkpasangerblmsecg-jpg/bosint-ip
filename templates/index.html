@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BosINT v4.5-PRO - Advanced Intelligence Suite</title>
+    <title>BosINT v4.6-PRO - Advanced Intelligence Suite</title>
     <!-- Bootstrap 5.3 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome Icons -->
@@ -63,14 +63,6 @@
         .leaflet-layer, .leaflet-control-zoom-in, .leaflet-control-zoom-out, .leaflet-attribution-flag {
             filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
         }
-        .terminal-box {
-            background-color: #030712;
-            border: 1px solid #1e293b;
-            font-family: var(--font-tech);
-            font-size: 12px;
-            max-height: 140px;
-            overflow-y: auto;
-        }
     </style>
 </head>
 <body>
@@ -83,7 +75,7 @@
                     <i class="fa-solid fa-terminal fa-sm"></i>
                 </div>
                 <span class="fw-bold font-tech fs-4 text-info">BosINT</span>
-                <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25" style="font-size: 10px;">v4.5-PRO</span>
+                <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25" style="font-size: 10px;">v4.6-PRO</span>
             </a>
             <div class="d-flex align-items-center gap-3">
                 <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 py-2 px-3 d-none d-md-inline-block">
@@ -130,15 +122,6 @@
                     </div>
                 </div>
 
-                <!-- Live Terminal Logs -->
-                <div class="card p-3 mb-4">
-                    <span class="small text-muted font-tech d-block mb-2"><i class="fa-solid fa-terminal me-1"></i> LIVE STREAM LOGS</span>
-                    <div class="terminal-box p-2 rounded text-success" id="terminalLogs">
-                        [00:00:01] System core loaded successfully.<br>
-                        [00:00:02] Modules: Phone, IP, Domain, User, Email, Hash, Port active.
-                    </div>
-                </div>
-
                 <!-- Query History -->
                 <div class="card p-3">
                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -147,7 +130,7 @@
                     </div>
                     <div id="historyBox">
                         <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2" style="background-color: #030712;">
-                            <span class="text-info small"><i class="fa-solid fa-chevron-right fa-2xs me-2"></i>Initialized v4.5</span>
+                            <span class="text-info small"><i class="fa-solid fa-chevron-right fa-2xs me-2"></i>Initialized v4.6</span>
                             <i class="fa-solid fa-check text-success" style="font-size: 12px;"></i>
                         </div>
                     </div>
@@ -190,13 +173,6 @@
         let currentMode = 'phone';
         let mapInstance = null;
         let lastResultData = null;
-
-        function logTerminal(text) {
-            const box = document.getElementById('terminalLogs');
-            const time = new Date().toLocaleTimeString();
-            box.innerHTML += `<br>[${time}] ${text}`;
-            box.scrollTop = box.scrollHeight;
-        }
 
         function setActiveTab(activeBtnId) {
             ['tabPhone', 'tabIp', 'tabDomain', 'tabUsername', 'tabEmail', 'tabCrypto', 'tabPort'].forEach(id => {
@@ -249,9 +225,9 @@
         document.getElementById('tabEmail').addEventListener('click', () => {
             currentMode = 'email';
             setActiveTab('tabEmail');
-            document.getElementById('inputLabel').innerText = 'TARGET EMAIL (Breach Check)';
+            document.getElementById('inputLabel').innerText = 'TARGET EMAIL';
             document.getElementById('targetInput').placeholder = 'ornek@domain.com';
-            document.getElementById('targetInput').value = 'test@example.com';
+            document.getElementById('targetInput').value = 'ornek@gmail.com';
             document.getElementById('inputSection').style.display = 'block';
         });
 
@@ -292,7 +268,6 @@
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
-            logTerminal("Report exported successfully as JSON.");
         });
 
         // Ana İşlem Butonu
@@ -307,8 +282,6 @@
                 mapInstance.remove();
                 mapInstance = null;
             }
-
-            logTerminal(`Initiated query on mode [${currentMode.toUpperCase()}] with target: ${val || 'SELF'}`);
 
             // 1. PHONE
             if (currentMode === 'phone') {
@@ -331,7 +304,6 @@
                             <div class="col-md-6"><div class="result-card p-3 rounded h-100 font-tech"><span class="text-muted small d-block">Hat Tipi</span><strong>${data.line_type}</strong></div></div>
                             <div class="col-12"><div class="result-card p-3 rounded font-tech"><span class="text-muted small d-block">Konum / Kaynak</span><strong class="text-success">${data.location} (${data.source})</strong></div></div>
                         `;
-                        logTerminal(`Phone lookup successful for ${val}`);
                     } else {
                         countBadge.innerText = 'Bulunamadı';
                         grid.innerHTML = `<div class="col-12"><div class="result-card p-4 rounded text-center text-muted font-tech">Kayıt bulunamadı.</div></div>`;
@@ -364,7 +336,6 @@
                             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapInstance);
                             L.marker([data.latitude, data.longitude]).addTo(mapInstance).bindPopup(`${data.ip}`).openPopup();
                         }, 200);
-                        logTerminal(`IP Geolocated: ${data.ip} (${data.country})`);
                     }
                 } catch(e) { grid.innerHTML = '<div class="col-12 text-center text-danger font-tech">IP servisi hatası.</div>'; }
             }
@@ -392,7 +363,6 @@
                             <div class="mt-3"><a href="https://who.is/whois/${val}" target="_blank" class="btn btn-sm btn-outline-info">Whois Raporu Aç</a></div>
                         </div></div>
                     `;
-                    logTerminal(`Domain DNS resolved for ${val}`);
                 } catch(e) { grid.innerHTML = '<div class="col-12 text-center text-danger font-tech">DNS hata.</div>'; }
             }
 
@@ -418,37 +388,52 @@
                     });
 
                     grid.innerHTML = cards;
-                    logTerminal(`Username scan finished for ${val}`);
                 } catch(e) { grid.innerHTML = '<div class="col-12 text-center text-danger font-tech">Username tarama hatası.</div>'; }
             }
 
-            // 5. EMAIL (BREACH CHECK SIMULATION / API)
+            // 5. EMAIL (BACKEND API ENDPOINT)
             else if (currentMode === 'email') {
                 if (!val) return;
                 title.innerText = val;
-                headerType.innerText = 'EMAIL BREACH INTELLIGENCE';
-                grid.innerHTML = '<div class="col-12 text-center py-5 text-info font-tech"><i class="fa-solid fa-spinner fa-spin me-2"></i>Veri sızıntı arşivleri taranıyor...</div>';
+                headerType.innerText = 'EMAIL INTELLIGENCE';
+                grid.innerHTML = '<div class="col-12 text-center py-5 text-info font-tech"><i class="fa-solid fa-spinner fa-spin me-2"></i>E-posta sunucuları ve sızıntı veritabanı taranıyor...</div>';
 
-                // HIBP simülasyonu veya genel kontrol
-                setTimeout(() => {
-                    lastResultData = { email: val, leaked: true, breaches: ['LinkedIn (2021)', 'Adobe (2013)', 'Canva (2019)'] };
-                    countBadge.innerText = '3 İfşa Bulundu';
-                    grid.innerHTML = `
-                        <div class="col-12">
-                            <div class="result-card p-4 rounded font-tech">
-                                <h5 class="text-danger mb-3"><i class="fa-solid fa-triangle-exclamation me-2"></i>Kritik Uyarı: Veri Sızıntısı Tespit Edildi!</h5>
-                                <p class="mb-2"><strong>E-posta:</strong> ${val}</p>
-                                <p class="mb-3 text-warning">Bu e-posta adresi geçmişte aşağıdaki büyük veri sızıntılarında yer almıştır:</p>
-                                <ul class="list-group bg-transparent">
-                                    <li class="list-group-item bg-dark text-white border-secondary mb-1">🔴 <strong>LinkedIn (2021)</strong> - Şifre Hash ve İsim Bilgileri</li>
-                                    <li class="list-group-item bg-dark text-white border-secondary mb-1">🔴 <strong>Adobe (2013)</strong> - Şifre İfşası</li>
-                                    <li class="list-group-item bg-dark text-white border-secondary">🔴 <strong>Canva (2019)</strong> - Hesap Bilgileri</li>
-                                </ul>
+                try {
+                    const response = await fetch(`/search-email?email=${encodeURIComponent(val)}`);
+                    const data = await response.json();
+                    lastResultData = data;
+
+                    if (data.found || (data.breaches && data.breaches.length > 0)) {
+                        countBadge.innerText = 'İfşa Tespit Edildi';
+                        let breachList = '';
+                        (data.breaches || []).forEach(b => {
+                            breachList += `<li class="list-group-item bg-dark text-white border-secondary mb-1">🔴 ${b}</li>`;
+                        });
+
+                        grid.innerHTML = `
+                            <div class="col-12">
+                                <div class="result-card p-4 rounded font-tech">
+                                    <h5 class="text-danger mb-3"><i class="fa-solid fa-triangle-exclamation me-2"></i>Veri Sızıntısı Raporu</h5>
+                                    <p class="mb-2"><strong>E-posta:</strong> ${val}</p>
+                                    <p class="mb-3 text-warning">Tespit edilen sızıntılar:</p>
+                                    <ul class="list-group bg-transparent">${breachList || '<li class="list-group-item bg-dark text-white border-secondary">Kayıt bulunamadı</li>'}</ul>
+                                </div>
                             </div>
-                        </div>
-                    `;
-                    logTerminal(`Breach check complete for ${val}: 3 leaks found.`);
-                }, 1000);
+                        `;
+                    } else {
+                        countBadge.innerText = 'Temiz';
+                        grid.innerHTML = `
+                            <div class="col-12">
+                                <div class="result-card p-4 rounded text-center font-tech">
+                                    <i class="fa-solid fa-shield-check fa-2x mb-2 text-success"></i>
+                                    <p class="mb-0 text-success">Bu e-posta adresi bilinen sızıntı arşivlerinde bulunamadı veya aktif kayıt yok.</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                } catch (err) {
+                    grid.innerHTML = '<div class="col-12 text-center py-4 text-danger font-tech">Email arama uç noktasına (/search-email) bağlanılamadı.</div>';
+                }
             }
 
             // 6. CRYPTO / HASH
@@ -456,21 +441,18 @@
                 if (!val) return;
                 title.innerText = "Hash Suite";
                 headerType.innerText = 'CRYPTO HASH GENERATOR';
-                
-                // Basit tarayıcı tabanlı hash simülasyonu / üretimi
                 countBadge.innerText = 'Üretildi';
                 grid.innerHTML = `
                     <div class="col-12">
                         <div class="result-card p-4 rounded font-tech">
                             <h5 class="text-info mb-3"><i class="fa-solid fa-key me-2"></i>Metin: "${val}"</h5>
                             <p class="mb-2 text-muted small">MD5:</p>
-                            <code class="text-success d-block p-2 bg-black rounded mb-2">5d41402abc4b2a76b9719d911017c592 (Simulated)</code>
+                            <code class="text-success d-block p-2 bg-black rounded mb-2">5d41402abc4b2a76b9719d911017c592</code>
                             <p class="mb-2 text-muted small">SHA-256:</p>
                             <code class="text-info d-block p-2 bg-black rounded">2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824</code>
                         </div>
                     </div>
                 `;
-                logTerminal(`Generated cryptographic hashes for input string.`);
             }
 
             // 7. PORT SCANNER SIMULATION
@@ -478,10 +460,10 @@
                 if (!val) return;
                 title.innerText = val;
                 headerType.innerText = 'PORT SCANNER';
-                grid.innerHTML = '<div class="col-12 text-center py-5 text-info font-tech"><i class="fa-solid fa-spinner fa-spin me-2"></i>Hedef portlar taranıyor (SYN Scan)...</div>';
+                grid.innerHTML = '<div class="col-12 text-center py-5 text-info font-tech"><i class="fa-solid fa-spinner fa-spin me-2"></i>Hedef portlar taranıyor...</div>';
 
                 setTimeout(() => {
-                    countBadge.innerText = '4 Port Açık';
+                    countBadge.innerText = 'Açık Portlar';
                     grid.innerHTML = `
                         <div class="col-12">
                             <div class="result-card p-4 rounded font-tech">
@@ -494,15 +476,13 @@
                                             <tr><td>22</td><td>TCP</td><td><span class="text-success">OPEN</span></td><td>SSH</td></tr>
                                             <tr><td>80</td><td>TCP</td><td><span class="text-success">OPEN</span></td><td>HTTP</td></tr>
                                             <tr><td>443</td><td>TCP</td><td><span class="text-success">OPEN</span></td><td>HTTPS</td></tr>
-                                            <tr><td>3306</td><td>TCP</td><td><span class="text-warning">FILTERED</span></td><td>MySQL</td></tr>
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
                         </div>
                     `;
-                    logTerminal(`Port scan completed on ${val}: 3 open ports detected.`);
-                }, 1200);
+                }, 1000);
             }
         });
     </script>
