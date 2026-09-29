@@ -1,4 +1,5 @@
 Flask==3.0.2
 Flask-Cors==4.0.0
 requests==2.31.0
+phonenumbers==8.13.30
 gunicorn==21.2.0

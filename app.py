@@ -2,6 +2,8 @@ from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 import requests
 import os
+import phonenumbers
+from phonenumbers import carrier, geocoder, timezone, number_type
 
 app = Flask(__name__)
 CORS(app)
@@ -50,83 +52,51 @@ def search_phone():
 
     clean_phone = phone.strip()
 
-    # 1. TÜRKİYE (+90) KONTROLÜ VE OPERATÖR TAHMİNİ
-    if clean_phone.startswith("+90") or clean_phone.startswith("90"):
-        # Numara formatından alan kodunu ayıkla (Örn: +90546... -> 546)
-        digits_only = clean_phone.replace("+", "").replace(" ", "")
-        if digits_only.startswith("90") and len(digits_only) >= 5:
-            prefix = digits_only[2:5]
+    try:
+        parsed_number = phonenumbers.parse(clean_phone)
+        
+        if not phonenumbers.is_valid_number(parsed_number):
+            return jsonify({
+                "found": False,
+                "phone": clean_phone,
+                "message": "Geçersiz veya hatalı telefon numarası formatı."
+            })
+
+        location = geocoder.description_for_number(parsed_number, "tr") or "Küresel / Belirtilmemiş"
+        
+        carrier_name = carrier.name_for_number(parsed_number, "tr")
+        if not carrier_name:
+            carrier_name = "Operatör Bilgisi Gizli veya Numara Taşınmış"
+
+        n_type = number_type(parsed_number)
+        if n_type == phonenumbers.PhoneNumberType.MOBILE:
+            line_type = "Mobil Hat (Cellular)"
+        elif n_type == phonenumbers.PhoneNumberType.FIXED_LINE:
+            line_type = "Sabit Hat (Landline)"
         else:
-            prefix = ""
+            line_type = "VoIP / Sanal / Diğer Hat"
 
-        operator_guess = "Bilinmiyor (Numara Taşınmış Olabilir)"
-        if prefix.startswith('53'):
-            operator_guess = "Turkcell (Veya Taşınmış Diğer Operatör)"
-        elif prefix.startswith('54'):
-            operator_guess = "Vodafone (Veya Taşınmış Diğer Operatör)"
-        elif prefix.startswith('55'):
-            operator_guess = "Türk Telekom (Veya Taşınmış Diğer Operatör)"
+        tzs = timezone.time_zones_for_number(parsed_number)
+        timezone_str = tzs[0] if tzs else "Bilinmiyor"
+
+        formatted_num = phonenumbers.format_number(parsed_number, phonenumbers.PhoneNumberFormat.INTERNATIONAL)
 
         return jsonify({
             "found": True,
-            "phone": clean_phone,
-            "full_name": "Kayıtlı Abone (Gizli / KVKK)",
-            "operator": operator_guess,
-            "country": "Türkiye",
-            "source": "TR Telecom & Carrier Database"
+            "phone": formatted_num,
+            "full_name": "Kayıtlı Abone (KVKK / Gizli)",
+            "operator": carrier_name,
+            "line_type": line_type,
+            "location": location,
+            "timezone": timezone_str,
+            "source": "Global Telecom & Metadata Engine"
         })
 
-    # 2. AVRUPA ÜLKELERİ KONTROLÜ
-    elif clean_phone.startswith("+49"): # Almanya
-        return jsonify({
-            "found": True,
-            "phone": clean_phone,
-            "full_name": "Registered User (Germany)",
-            "operator": "Telekom Deutschland / Vodafone Germany / O2",
-            "country": "Almanya",
-            "source": "EU Carrier Gateway"
-        })
-    elif clean_phone.startswith("+44"): # İngiltere
-        return jsonify({
-            "found": True,
-            "phone": clean_phone,
-            "full_name": "Registered User (UK)",
-            "operator": "EE / Vodafone UK / O2 / Three",
-            "country": "İngiltere",
-            "source": "EU Carrier Gateway"
-        })
-    elif clean_phone.startswith("+33"): # Fransa
-        return jsonify({
-            "found": True,
-            "phone": clean_phone,
-            "full_name": "Utilisateur Enregistré (France)",
-            "operator": "Orange / SFR / Bouygues Telecom / Free",
-            "country": "Fransa",
-            "source": "EU Carrier Gateway"
-        })
-    elif clean_phone.startswith("+39"): # İtalya
-        return jsonify({
-            "found": True,
-            "phone": clean_phone,
-            "full_name": "Utente Registrato (Italy)",
-            "operator": "TIM / Vodafone Italia / Wind Tre / Iliad",
-            "country": "İtalya",
-            "source": "EU Carrier Gateway"
-        })
-    elif clean_phone.startswith("+34"): # İspanya
-        return jsonify({
-            "found": True,
-            "phone": clean_phone,
-            "full_name": "Usuario Registrado (Spain)",
-            "operator": "Movistar / Vodafone Spain / Orange / MásMóvil",
-            "country": "İspanya",
-            "source": "EU Carrier Gateway"
-        })
-    else:
+    except Exception as e:
         return jsonify({
             "found": False,
             "phone": clean_phone,
-            "message": "Bu numara desteklenen Türkiye veya Avrupa operatör aralığında bulunamadı."
+            "message": "Numara analiz edilemedi: Hatalı format."
         })
 
 @app.route('/', methods=['GET'])
