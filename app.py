@@ -1,69 +1,55 @@
 from flask import Flask, jsonify, render_template, request
+from flask_cors import CORS
+import asyncio
+from holehe.core import import_submodules, check_mail
 
 app = Flask(__name__)
+CORS(app)
 
 # İsteğe bağlı lokal rehber
 LOCAL_CONTACTS = {
     # "+905554443322": ["Örnek Ad Soyad"],
 }
 
-
 @app.route("/")
-def index():  # <-- BURAYA 'def' EKLENDİ
+def index():
     return render_template("index.html")
-
 
 # 1. Telefon ve Lokal Rehber İstihbarat Modülü
 @app.route("/search-phone")
 def search_phone():
     phone = request.args.get("phone", "").strip()
-
     if not phone:
         return jsonify({"found": False, "message": "Numara girilmedi."})
 
     saved_names = LOCAL_CONTACTS.get(phone, [])
-
     if saved_names:
         return jsonify({
-            "found": True,
-            "phone": phone,
-            "full_name": " / ".join(saved_names),
-            "operator": "Lokal Rehber Eşleşmesi",
-            "line_type": "Kayıtlı Kişi",
-            "location": "Türkiye / Rehber Kaydı",
-            "timezone": "Europe/Istanbul (UTC+3)",
-            "source": "Lokal Rehber",
+            "found": True, "phone": phone, "full_name": " / ".join(saved_names),
+            "operator": "Lokal Rehber Eşleşmesi", "line_type": "Kayıtlı Kişi",
+            "location": "Türkiye / Rehber Kaydı", "timezone": "Europe/Istanbul (UTC+3)",
+            "source": "Lokal Rehber"
         })
 
     if phone.startswith("+90") or phone.startswith("90") or phone.startswith("0"):
         return jsonify({
-            "found": True,
-            "phone": phone,
-            "full_name": "Kayıtlı Abone (Kurumsal / Bireysel Doğrulandı)",
-            "operator": "Turkcell / Vodafone TR",
-            "line_type": "Mobil (GSM / LTE)",
-            "location": "Türkiye / İstanbul, Marmara Bölgesi",
-            "timezone": "Europe/Istanbul (UTC+3)",
-            "source": "Global HLR Lookup & Telecom Registry",
+            "found": True, "phone": phone, "full_name": "Kayıtlı Abone (Kurumsal / Bireysel Doğrulandı)",
+            "operator": "Turkcell / Vodafone TR", "line_type": "Mobil (GSM / LTE)",
+            "location": "Türkiye / İstanbul, Marmara Bölgesi", "timezone": "Europe/Istanbul (UTC+3)",
+            "source": "Global HLR Lookup & Telecom Registry"
         })
     else:
         return jsonify({
-            "found": True,
-            "phone": phone,
-            "full_name": "Uluslararası Hat Sahibi",
-            "operator": "Global Carrier Routing",
-            "line_type": "Mobil / Uluslararası Dolaşım",
-            "location": "Global / Yurt Dışı Lokasyon",
-            "timezone": "UTC / Bölgesel Saat Dilimi",
-            "source": "International Telecom Database",
+            "found": True, "phone": phone, "full_name": "Uluslararası Hat Sahibi",
+            "operator": "Global Carrier Routing", "line_type": "Mobil / Uluslararası Dolaşım",
+            "location": "Global / Yurt Dışı Lokasyon", "timezone": "UTC / Bölgesel Saat Dilimi",
+            "source": "International Telecom Database"
         })
-
 
 # 2. Sosyal Medya / Kullanıcı Adı Tarama Modülü
 @app.route("/search")
 def search_username():
     username = request.args.get("username", "").strip()
-
     if not username:
         return jsonify({"found_sites": {}})
 
@@ -77,11 +63,41 @@ def search_username():
         "tiktok": f"https://www.tiktok.com/@{username}",
         "pinterest": f"https://pinterest.com/{username}",
     }
-
     return jsonify({"found_sites": found_sites})
 
+# 3. Holehe E-posta İstihbarat Modülü (Gerçek Canlı Tarama)
+@app.route("/search-email", methods=["POST"])
+def search_email():
+    data = request.get_json() or {}
+    email = data.get("email", "").strip()
+    
+    if not email:
+        return jsonify({"success": False, "error": "E-posta adresi gerekli"}), 400
+
+    try:
+        modules = import_submodules("holehe.modules")
+        client_list = [mod for mod in modules if hasattr(mod, "check")]
+
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
+        async def run_checks():
+            out = []
+            await check_mail(client_list, email, out)
+            return out
+
+        results = loop.run_until_complete(run_checks())
+        registered_services = [r for r in results if r.get("exists") == True]
+
+        return jsonify({
+            "success": True,
+            "email": email,
+            "total_checked": len(results),
+            "registered": registered_services
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == "__main__":
-    print("[+] BosINT v4.4-PRO Full-Stack Backend Çalıştırılıyor...")
-    print("[+] Sunucu Aktif: http://127.0.0.1:5000")
+    print("[+] BosINT v4.7-PRO Full-Stack Backend Çalıştırılıyor...")
     app.run(debug=True, port=5000)

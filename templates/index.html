@@ -283,17 +283,22 @@
                 headerType.innerText = 'PHONE INTELLIGENCE';
                 grid.innerHTML = '<div class="col-12 text-center py-5 text-info font-tech"><i class="fa-solid fa-spinner fa-spin me-2"></i>Telekom veritabanı sorgulanıyor...</div>';
 
-                setTimeout(() => {
-                    lastResultData = { phone: val, found: true, full_name: "Gizli Abone", operator: "Turkcell / Vodafone", line_type: "GSM / Mobil", location: "Türkiye", source: "HLR Lookup" };
+                try {
+                    const response = await fetch(`/search-phone?phone=${encodeURIComponent(val)}`);
+                    const data = await response.json();
+                    lastResultData = data;
+
                     countBadge.innerText = 'Başarılı';
                     grid.innerHTML = `
-                        <div class="col-md-6"><div class="result-card p-3 rounded h-100 font-tech"><span class="text-muted small d-block">Uluslararası</span><strong class="text-info">${val}</strong></div></div>
-                        <div class="col-md-6"><div class="result-card p-3 rounded h-100 font-tech"><span class="text-muted small d-block">Abone</span><strong class="text-warning">Kayıtlı Profil</strong></div></div>
-                        <div class="col-md-6"><div class="result-card p-3 rounded h-100 font-tech"><span class="text-muted small d-block">Operatör</span><strong>Global GSM</strong></div></div>
-                        <div class="col-md-6"><div class="result-card p-3 rounded h-100 font-tech"><span class="text-muted small d-block">Hat Tipi</span><strong>Postpaid / Mobil</strong></div></div>
-                        <div class="col-12"><div class="result-card p-3 rounded font-tech"><span class="text-muted small d-block">Konum / Kaynak</span><strong class="text-success">Türkiye (HLR Active Node)</strong></div></div>
+                        <div class="col-md-6"><div class="result-card p-3 rounded h-100 font-tech"><span class="text-muted small d-block">Telefon / Hat</span><strong class="text-info">${data.phone || val}</strong></div></div>
+                        <div class="col-md-6"><div class="result-card p-3 rounded h-100 font-tech"><span class="text-muted small d-block">Abone / Profil</span><strong class="text-warning">${data.full_name || 'Bilinmiyor'}</strong></div></div>
+                        <div class="col-md-6"><div class="result-card p-3 rounded h-100 font-tech"><span class="text-muted small d-block">Operatör</span><strong>${data.operator || 'GSM'}</strong></div></div>
+                        <div class="col-md-6"><div class="result-card p-3 rounded h-100 font-tech"><span class="text-muted small d-block">Hat Tipi</span><strong>${data.line_type || 'Mobil'}</strong></div></div>
+                        <div class="col-12"><div class="result-card p-3 rounded font-tech"><span class="text-muted small d-block">Konum / Kaynak</span><strong class="text-success">${data.location || 'Türkiye'} (${data.source || 'HLR'})</strong></div></div>
                     `;
-                }, 800);
+                } catch(e) {
+                    grid.innerHTML = '<div class="col-12 text-center text-danger font-tech">Telefon sorgulama hatası.</div>';
+                }
             }
 
             // 2. IP / GEOLOCATION
@@ -358,70 +363,68 @@
                 headerType.innerText = 'USERNAME SCAN';
                 grid.innerHTML = '<div class="col-12 text-center py-5 text-info font-tech"><i class="fa-solid fa-spinner fa-spin me-2"></i>Sosyal ağlar taranıyor...</div>';
 
-                setTimeout(() => {
-                    lastResultData = { username: val, found_sites: { github: `https://github.com/${val}`, twitter: `https://twitter.com/${val}`, instagram: `https://instagram.com/${val}` } };
-                    countBadge.innerText = '3 Eşleşme';
-                    grid.innerHTML = `
-                        <div class="col-md-6"><div class="result-card p-3 rounded font-tech"><span class="text-info fw-bold">GITHUB</span><br><a href="https://github.com/${val}" target="_blank" class="text-white text-truncate d-block" style="font-size:12px;">https://github.com/${val}</a></div></div>
-                        <div class="col-md-6"><div class="result-card p-3 rounded font-tech"><span class="text-info fw-bold">TWITTER / X</span><br><a href="https://twitter.com/${val}" target="_blank" class="text-white text-truncate d-block" style="font-size:12px;">https://twitter.com/${val}</a></div></div>
-                        <div class="col-md-6"><div class="result-card p-3 rounded font-tech"><span class="text-info fw-bold">INSTAGRAM</span><br><a href="https://instagram.com/${val}" target="_blank" class="text-white text-truncate d-block" style="font-size:12px;">https://instagram.com/${val}</a></div></div>
-                    `;
-                }, 800);
+                try {
+                    const response = await fetch(`/search?username=${encodeURIComponent(val)}`);
+                    const data = await response.json();
+                    lastResultData = data;
+
+                    const sites = data.found_sites || {};
+                    const keys = Object.keys(sites);
+                    countBadge.innerText = keys.length + ' Eşleşme';
+
+                    let cardsHtml = '';
+                    keys.forEach(k => {
+                        cardsHtml += `
+                            <div class="col-md-6">
+                                <div class="result-card p-3 rounded font-tech">
+                                    <span class="text-info fw-bold text-uppercase">${k}</span><br>
+                                    <a href="${sites[k]}" target="_blank" class="text-white text-truncate d-block" style="font-size:12px;">${sites[k]}</a>
+                                </div>
+                            </div>`;
+                    });
+
+                    grid.innerHTML = cardsHtml || '<div class="col-12 text-center text-muted font-tech">Kayıt bulunamadı.</div>';
+                } catch(e) {
+                    grid.innerHTML = '<div class="col-12 text-center text-danger font-tech">Kullanıcı adı tarama hatası.</div>';
+                }
             }
 
-            // 5. EMAIL (CLIENT-SIDE OSINT INTEGRATION)
+            // 5. EMAIL (HOLEHE OSINT INTEGRATION)
             else if (currentMode === 'email') {
                 if (!val) return;
                 title.innerText = val;
-                headerType.innerText = 'EMAIL INTELLIGENCE & BREACH';
-                grid.innerHTML = '<div class="col-12 text-center py-5 text-info font-tech"><i class="fa-solid fa-spinner fa-spin me-2"></i>E-posta servisleri ve MX kayıtları analiz ediliyor...</div>';
+                headerType.innerText = 'EMAIL INTELLIGENCE & HOLEHE SCAN';
+                grid.innerHTML = '<div class="col-12 text-center py-5 text-info font-tech"><i class="fa-solid fa-spinner fa-spin me-2"></i>Holehe ile 120+ platform taranıyor, lütfen bekleyin...</div>';
 
                 try {
-                    // MX / Domain doğrulama simülasyonu ve akıllı breach analizi
-                    const domainPart = val.split('@')[1] || 'unknown.com';
-                    
-                    setTimeout(() => {
-                        lastResultData = { email: val, domain: domainPart, status: "Active", mx_check: "Passed", breach_count: 2 };
-                        countBadge.innerText = 'Analiz Tamamlandı';
-                        grid.innerHTML = `
-                            <div class="col-md-6">
-                                <div class="result-card p-3 rounded h-100 font-tech">
-                                    <span class="text-muted small d-block">E-posta Adresi</span>
-                                    <strong class="text-info">${val}</strong>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="result-card p-3 rounded h-100 font-tech">
-                                    <span class="text-muted small d-block">Alan Adı (Domain)</span>
-                                    <strong class="text-warning">${domainPart}</strong>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="result-card p-3 rounded h-100 font-tech">
-                                    <span class="text-muted small d-block">MX Kayıt Durumu</span>
-                                    <strong class="text-success">Aktif (Mail Alabilir)</strong>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="result-card p-3 rounded h-100 font-tech">
-                                    <span class="text-muted small d-block">Servis Sağlayıcı</span>
-                                    <strong>${domainPart.includes('gmail') ? 'Google Workspace' : domainPart.includes('outlook') || domainPart.includes('hotmail') ? 'Microsoft Exchange' : 'Özel / Kurumsal Mail Altyapısı'}</strong>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="result-card p-4 rounded font-tech mt-2">
-                                    <h5 class="text-danger mb-2"><i class="fa-solid fa-triangle-exclamation me-2"></i>Açık Kaynak Sızıntı Tarama Sonucu</h5>
-                                    <p class="text-muted small mb-3">Hedef adresin genel kurumsal veri havuzlarındaki izleri:</p>
-                                    <ul class="list-group bg-transparent">
-                                        <li class="list-group-item bg-dark text-white border-secondary mb-1">🟡 <strong>Genel Platform Kaydı:</strong> Çeşitli web servislerinde hesap aktivitesi saptandı.</li>
-                                        <li class="list-group-item bg-dark text-white border-secondary">🟢 <strong>Kritik Parola İfşası:</strong> Doğrudan açık bir veritabanı sızıntısına rastlanmadı.</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        `;
-                    }, 900);
+                    const response = await fetch('/search-email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: val })
+                    });
+                    const data = await response.json();
+                    lastResultData = data;
+
+                    if(data.success) {
+                        countBadge.innerText = data.registered.length + ' Eşleşme';
+                        let htmlContent = '';
+                        
+                        data.registered.forEach(site => {
+                            htmlContent += `
+                                <div class="col-md-4">
+                                    <div class="result-card p-3 rounded h-100 font-tech">
+                                        <span class="text-info fw-bold">${site.name.toUpperCase()}</span><br>
+                                        <span class="text-success small"><i class="fa-solid fa-circle-check me-1"></i>Kayıtlı Hesap Bulundu</span>
+                                    </div>
+                                </div>`;
+                        });
+                        
+                        grid.innerHTML = htmlContent || '<div class="col-12 text-center text-muted font-tech">Hiçbir platformda kayıt bulunamadı.</div>';
+                    } else {
+                        grid.innerHTML = `<div class="col-12 text-center text-danger font-tech">Hata: ${data.error}</div>`;
+                    }
                 } catch (err) {
-                    grid.innerHTML = '<div class="col-12 text-center py-4 text-danger font-tech">E-posta analiz işleminde hata oluştu.</div>';
+                    grid.innerHTML = '<div class="col-12 text-center py-4 text-danger font-tech">Sunucu ile iletişim kurulamadı.</div>';
                 }
             }
 
