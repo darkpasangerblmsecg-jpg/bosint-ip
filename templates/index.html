@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus OSINT v4.7-PRO - Advanced Intelligence Suite</title>
+    <title>Nexus OSINT v4.8-PRO - Advanced Intelligence Suite</title>
     <!-- Bootstrap 5.3 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <!-- Exif-JS for reading image GPS metadata -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.js"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -55,7 +57,7 @@
             transform: translateY(-2px);
         }
         #map {
-            height: 250px;
+            height: 280px;
             width: 100%;
             border-radius: 6px;
             z-index: 1;
@@ -75,7 +77,7 @@
                     <i class="fa-solid fa-terminal fa-sm"></i>
                 </div>
                 <span class="fw-bold font-tech fs-4 text-info">Nexus OSINT</span>
-                <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25" style="font-size: 10px;">v4.7-PRO</span>
+                <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25" style="font-size: 10px;">v4.8-PRO</span>
             </a>
             <div class="d-flex align-items-center gap-3">
                 <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 py-2 px-3 d-none d-md-inline-block">
@@ -108,7 +110,7 @@
                         <div class="col-4 mt-1"><button id="tabAddress" class="btn btn-sm btn-outline-secondary text-secondary border-0 w-100 font-tech">Address</button></div>
                         <div class="col-6 mt-1"><button id="tabCrypto" class="btn btn-sm btn-outline-secondary text-secondary border-0 w-100 font-tech">Hash</button></div>
                         <div class="col-6 mt-1"><button id="tabPort" class="btn btn-sm btn-outline-secondary text-secondary border-0 w-100 font-tech">Port Scanner</button></div>
-                        <div class="col-12 mt-1"><button id="tabPhoto" class="btn btn-sm btn-outline-warning text-warning border border-warning border-opacity-50 w-100 font-tech"><i class="fa-solid fa-camera-retro me-1"></i> Photo Geo-Locate</button></div>
+                        <div class="col-12 mt-1"><button id="tabPhoto" class="btn btn-sm btn-outline-warning text-warning border border-warning border-opacity-50 w-100 font-tech"><i class="fa-solid fa-camera-retro me-1"></i> Photo EXIF & Reverse Geo</button></div>
                     </div>
 
                     <!-- Input Alanı -->
@@ -132,7 +134,7 @@
                     </div>
                     <div id="historyBox">
                         <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2" style="background-color: #030712;">
-                            <span class="text-info small"><i class="fa-solid fa-chevron-right fa-2xs me-2"></i>Initialized v4.7-PRO</span>
+                            <span class="text-info small"><i class="fa-solid fa-chevron-right fa-2xs me-2"></i>Initialized v4.8-PRO</span>
                             <i class="fa-solid fa-check text-success" style="font-size: 12px;"></i>
                         </div>
                     </div>
@@ -175,7 +177,6 @@
         let currentMode = 'phone';
         let mapInstance = null;
         let lastResultData = null;
-        let uploadedFileObject = null;
 
         const embeddedSites = [
             { name: "Instagram", url: "https://www.instagram.com/{account}" },
@@ -273,18 +274,17 @@
             document.getElementById('targetInput').value = 'scanme.nmap.org';
         });
 
-        // FOTOĞRAF BULUCU SEKMESİ
+        // FOTOĞRAF BULUCU SEKMESİ (EXIF GPS OKUYUCU + REVERSE LENS ENTEGRE)
         document.getElementById('tabPhoto').addEventListener('click', () => {
             currentMode = 'photo';
             setActiveTab('tabPhoto');
             document.getElementById('inputLabel').innerText = 'UPLOAD BUILDING / LOCATION PHOTO (.JPG, .PNG)';
             
-            // Input alanını dosya yükleme (file) inputuna çeviriyoruz
             const container = document.getElementById('inputGroupContainer');
             container.innerHTML = `
                 <input type="file" id="photoFileInput" class="form-control" accept="image/*">
             `;
-            document.getElementById('actionBtn').innerHTML = '<i class="fa-solid fa-satellite-dish me-2"></i>Analyze & Reverse Search';
+            document.getElementById('actionBtn').innerHTML = '<i class="fa-solid fa-satellite-dish me-2"></i>Extract EXIF & Search Location';
         });
 
         function restoreTextInput() {
@@ -317,6 +317,15 @@
             downloadAnchor.remove();
         });
 
+        // Yardımcı Fonksiyon: EXIF koordinatlarını desimal dereceye çevirir
+        function convertDMSToDD(degrees, minutes, seconds, direction) {
+            let dd = degrees + minutes / 60 + seconds / (60 * 60);
+            if (direction === "S" || direction === "W") {
+                dd = dd * -1;
+            }
+            return dd;
+        }
+
         // Ana İşlem Butonu
         document.getElementById('actionBtn').addEventListener('click', async () => {
             const grid = document.getElementById('resultsGrid');
@@ -329,7 +338,7 @@
                 mapInstance = null;
             }
 
-            // 9. PHOTO / GEO-LOCATE (YENİ MODÜL)
+            // 9. PHOTO / EXIF & REVERSE GEO-LOCATE
             if (currentMode === 'photo') {
                 const fileInput = document.getElementById('photoFileInput');
                 if (!fileInput || !fileInput.files[0]) {
@@ -338,53 +347,92 @@
                 }
                 const file = fileInput.files[0];
                 title.innerText = file.name;
-                headerType.innerText = 'PHOTO INTELLIGENCE & GLOBAL REVERSE SEARCH';
-                grid.innerHTML = '<div class="col-12 text-center py-5 text-warning font-tech"><i class="fa-solid fa-spinner fa-spin me-2"></i>Görsel pikselleri, EXIF verileri ve küresel uydu indeksleri taranıyor...</div>';
+                headerType.innerText = 'EXIF METADATA & VISUAL OSINT SCANNER';
+                grid.innerHTML = '<div class="col-12 text-center py-5 text-warning font-tech"><i class="fa-solid fa-spinner fa-spin me-2"></i>Görsel meta verileri (EXIF GPS) ve piksel yapısı taranıyor...</div>';
 
-                setTimeout(() => {
-                    countBadge.innerText = 'Eşleşmeler Bulundu';
-                    lastResultData = { filename: file.name, size: file.size, type: file.type, status: "Analyzed" };
-                    
-                    grid.innerHTML = `
-                        <div class="col-md-6">
-                            <div class="result-card p-3 rounded h-100 font-tech">
-                                <span class="text-muted small d-block">Dosya Adı & Boyut</span>
-                                <strong class="text-warning">${file.name}</strong> (${(file.size / 1024).toFixed(1)} KB)
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="result-card p-3 rounded h-100 font-tech">
-                                <span class="text-muted small d-block">EXIF Meta Veri Durumu</span>
-                                <strong class="text-success">Temiz / GPS Verisi Yok (Simüle Edilmiş Konum Analizi)</strong>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="result-card p-4 rounded font-tech">
-                                <h5 class="text-warning mb-3"><i class="fa-solid fa-globe me-2"></i>Küresel Tersine Görsel Arama Sonuçları</h5>
-                                <p class="text-muted small mb-3">Bina veya mekanın dünya genelindeki eşleşmeleri aşağıdadır. Doğrudan arama motorlarında taratabilirsiniz:</p>
-                                <div class="d-flex flex-wrap gap-2">
-                                    <a href="https://lens.google.com/" target="_blank" class="btn btn-sm btn-outline-info"><i class="fa-brands fa-google me-1"></i> Google Lens'te Ara</a>
-                                    <a href="https://yandex.com/images/" target="_blank" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-eye me-1"></i> Yandex Visual Search</a>
-                                    <a href="https://www.tineye.com/" target="_blank" class="btn btn-sm btn-outline-secondary text-white"><i class="fa-solid fa-magnifying-glass me-1"></i> TinEye</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="result-card p-3 rounded font-tech">
-                                <span class="text-muted small d-block mb-2">Olası Konum Tahmini & Harita Eşleşmesi</span>
-                                <div id="map"></div>
-                            </div>
-                        </div>
-                    `;
+                // Görseli önizleme için URL oluşturuyoruz
+                const imageUrl = URL.createObjectURL(file);
+
+                // EXIF-JS ile GPS verilerini okumaya çalışıyoruz
+                EXIF.getData(file, function() {
+                    const exifData = EXIF.getAllTags(this);
+                    let latTag = EXIF.getTag(this, "GPSLatitude");
+                    let latRef = EXIF.getTag(this, "GPSLatitudeRef");
+                    let lonTag = EXIF.getTag(this, "GPSLongitude");
+                    let lonRef = EXIF.getTag(this, "GPSLongitudeRef");
 
                     setTimeout(() => {
-                        // Varsayılan olarak İstanbul/Türkiye koordinatlarında örnek bina lokasyonu gösterelim
-                        mapInstance = L.map('map').setView([41.0082, 28.9784], 13);
-                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapInstance);
-                        L.marker([41.0082, 28.9784]).addTo(mapInstance).bindPopup(`<b>Hedef Bina Konum Tahmini</b><br>Görsel Eşleşme Noktası`).openPopup();
-                    }, 200);
+                        if (latTag && lonTag && latRef && lonRef) {
+                            // Fotoğrafın içinde gerçek GPS verisi var!
+                            const lat = convertDMSToDD(latTag[0], latTag[1], latTag[2], latRef);
+                            const lon = convertDMSToDD(lonTag[0], lonTag[1], lonTag[2], lonRef);
+                            
+                            countBadge.innerText = 'GPS Verisi Bulundu';
+                            lastResultData = { filename: file.name, size: file.size, exif_found: true, coordinates: { lat, lon } };
 
-                }, 1500);
+                            grid.innerHTML = `
+                                <div class="col-md-6">
+                                    <div class="result-card p-3 rounded h-100 font-tech">
+                                        <span class="text-muted small d-block">Dosya Bilgisi</span>
+                                        <strong class="text-warning">${file.name}</strong> (${(file.size / 1024).toFixed(1)} KB)
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="result-card p-3 rounded h-100 font-tech">
+                                        <span class="text-muted small d-block">EXIF Durumu</span>
+                                        <strong class="text-success"><i class="fa-solid fa-check-circle me-1"></i> Gizli GPS Koordinatları Çekildi</strong>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="result-card p-3 rounded font-tech">
+                                        <span class="text-muted small d-block mb-2"><i class="fa-solid fa-map-location-dot me-1"></i> FOTOĞRAFIN ÇEKİLDİĞİ GERÇEK KONUM</span>
+                                        <div id="map"></div>
+                                    </div>
+                                </div>
+                            `;
+
+                            setTimeout(() => {
+                                mapInstance = L.map('map').setView([lat, lon], 16);
+                                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapInstance);
+                                L.marker([lat, lon]).addTo(mapInstance).bindPopup(`<b>Fotoğraf Konumu:</b><br>Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}`).openPopup();
+                            }, 200);
+
+                        } else {
+                            // Fotoğrafta EXIF yoksa (ekran görüntüsü veya indirilmiş foto), Google Lens / Yandex ile arama seçeneği sunuyoruz
+                            countBadge.innerText = 'EXIF Yok / Görsel Eşleşme';
+                            lastResultData = { filename: file.name, size: file.size, exif_found: false };
+
+                            grid.innerHTML = `
+                                <div class="col-md-6">
+                                    <div class="result-card p-3 rounded h-100 font-tech">
+                                        <span class="text-muted small d-block">Dosya Bilgisi</span>
+                                        <strong class="text-warning">${file.name}</strong> (${(file.size / 1024).toFixed(1)} KB)
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="result-card p-3 rounded h-100 font-tech">
+                                        <span class="text-muted small d-block">EXIF Durumu</span>
+                                        <strong class="text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i> GPS Verisi Bulunamadı (İnternet/Ekran Görüntüsü)</strong>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="result-card p-4 rounded font-tech text-center">
+                                        <h5 class="text-info mb-2"><i class="fa-solid fa-binoculars me-2"></i>Bina / Mekan Tespiti İçin Akıllı Yönlendirme</h5>
+                                        <p class="text-muted small mb-4">Bu fotoğrafta cihaz konum etiketi bulunmuyor. Binanın neresi olduğunu öğrenmek için görseli tek tıkla arama motorlarında taratabilirsin:</p>
+                                        <div class="d-flex justify-content-center gap-3">
+                                            <a href="https://lens.google.com" target="_blank" class="btn btn-info text-dark fw-bold px-4 py-2">
+                                                <i class="fa-solid fa-camera me-2"></i>Google Lens ile Ara
+                                            </a>
+                                            <a href="https://yandex.com/images/" target="_blank" class="btn btn-outline-warning px-4 py-2">
+                                                <i class="fa-solid fa-earth-americas me-2"></i>Yandex Görsel ile Ara
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }, 800);
+                });
                 return;
             }
 
