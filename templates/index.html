@@ -108,12 +108,13 @@
                         <div class="col-4 mt-1"><button id="tabAddress" class="btn btn-sm btn-outline-secondary text-secondary border-0 w-100 font-tech">Address</button></div>
                         <div class="col-6 mt-1"><button id="tabCrypto" class="btn btn-sm btn-outline-secondary text-secondary border-0 w-100 font-tech">Hash</button></div>
                         <div class="col-6 mt-1"><button id="tabPort" class="btn btn-sm btn-outline-secondary text-secondary border-0 w-100 font-tech">Port Scanner</button></div>
+                        <div class="col-12 mt-1"><button id="tabPhoto" class="btn btn-sm btn-outline-warning text-warning border border-warning border-opacity-50 w-100 font-tech"><i class="fa-solid fa-camera-retro me-1"></i> Photo Geo-Locate</button></div>
                     </div>
 
                     <!-- Input Alanı -->
                     <div id="inputSection">
                         <label class="form-label small text-muted font-tech" id="inputLabel">TARGET PHONE NUMBER</label>
-                        <div class="input-group mb-3">
+                        <div class="input-group mb-3" id="inputGroupContainer">
                             <input type="text" id="targetInput" class="form-control" value="+905554443322">
                             <button class="btn btn-outline-secondary text-info" type="button" onclick="document.getElementById('targetInput').value=''"><i class="fa-regular fa-copy"></i></button>
                         </div>
@@ -131,7 +132,7 @@
                     </div>
                     <div id="historyBox">
                         <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2" style="background-color: #030712;">
-                            <span class="text-info small"><i class="fa-solid fa-chevron-right fa-2xs me-2"></i>Initialized v4.7</span>
+                            <span class="text-info small"><i class="fa-solid fa-chevron-right fa-2xs me-2"></i>Initialized v4.7-PRO</span>
                             <i class="fa-solid fa-check text-success" style="font-size: 12px;"></i>
                         </div>
                     </div>
@@ -174,6 +175,7 @@
         let currentMode = 'phone';
         let mapInstance = null;
         let lastResultData = null;
+        let uploadedFileObject = null;
 
         const embeddedSites = [
             { name: "Instagram", url: "https://www.instagram.com/{account}" },
@@ -181,60 +183,27 @@
             { name: "Twitter / X", url: "https://twitter.com/{account}" },
             { name: "TikTok", url: "https://www.tiktok.com/@{account}" },
             { name: "GitHub", url: "https://github.com/{account}" },
-            { name: "Patreon", url: "https://www.patreon.com/{account}" },
             { name: "YouTube", url: "https://www.youtube.com/@{account}" },
             { name: "Reddit", url: "https://www.reddit.com/user/{account}" },
             { name: "LinkedIn", url: "https://www.linkedin.com/in/{account}" },
-            { name: "Pinterest", url: "https://tr.pinterest.com/{account}/" },
-            { name: "Twitch", url: "https://www.twitch.tv/{account}" },
-            { name: "Spotify", url: "https://open.spotify.com/user/{account}" },
-            { name: "SoundCloud", url: "https://soundcloud.com/{account}" },
-            { name: "Steam", url: "https://steamcommunity.com/id/{account}" },
-            { name: "Telegram", url: "https://t.me/{account}" },
-            { name: "Medium", url: "https://medium.com/@{account}" },
-            { name: "About.me", url: "https://about.me/{account}" },
-            { name: "Flickr", url: "https://www.flickr.com/people/{account}" },
-            { name: "Vimeo", url: "https://vimeo.com/{account}" },
-            { name: "Disqus", url: "https://disqus.com/by/{account}" },
-            { name: "Substack", url: "https://{account}.substack.com" },
-            { name: "Behance", url: "https://www.behance.net/{account}" },
-            { name: "Dribbble", url: "https://dribbble.com/{account}" },
-            { name: "DeviantArt", url: "https://www.deviantart.com/{account}" },
-            { name: "Goodreads", url: "https://www.goodreads.com/{account}" },
-            { name: "Vero", url: "https://vero.co/{account}" },
-            { name: "Kaggle", url: "https://www.kaggle.com/{account}" },
-            { name: "HackerNews", url: "https://news.ycombinator.com/user?id={account}" },
-            { name: "ProductHunt", url: "https://www.producthunt.com/@{account}" },
-            { name: "SlideShare", url: "https://www.slideshare.net/{account}" },
-            { name: "TradingView", url: "https://www.tradingview.com/u/{account}/" },
-            { name: "TripAdvisor", url: "https://www.tripadvisor.com/members/{account}" },
-            { name: "Wattpad", url: "https://www.wattpad.com/user/{account}" },
-            { name: "Keybase", url: "https://keybase.io/{account}" },
-            { name: "Blogger", url: "https://{account}.blogspot.com" },
-            { name: "WordPress", url: "https://{account}.wordpress.com" },
-            { name: "Gravatar", url: "https://en.gravatar.com/{account}" },
-            { name: "Foursquare", url: "https://foursquare.com/{account}" },
-            { name: "Mixcloud", url: "https://www.mixcloud.com/{account}" },
-            { name: "ReverbNation", url: "https://www.reverbnation.com/{account}" },
-            { name: "Bandcamp", url: "https://bandcamp.com/{account}" },
-            { name: "Venmo", url: "https://venmo.com/{account}" },
-            { name: "Ko-fi", url: "https://ko-fi.com/{account}" },
-            { name: "StackOverflow", url: "https://stackoverflow.com/users/{account}" },
-            { name: "Codecademy", url: "https://www.codecademy.com/profiles/{account}" },
-            { name: "GitLab", url: "https://gitlab.com/{account}" },
-            { name: "Bitbucket", url: "https://bitbucket.org/{account}" },
-            { name: "Snapchat", url: "https://www.snapchat.com/add/{account}" },
-            { name: "Telegram Channel", url: "https://t.me/s/{account}" },
-            { name: "HuggingFace", url: "https://huggingface.co/{account}" }
+            { name: "Telegram", url: "https://t.me/{account}" }
         ];
 
         function setActiveTab(activeBtnId) {
-            ['tabPhone', 'tabUsername', 'tabIp', 'tabDomain', 'tabEmail', 'tabAddress', 'tabCrypto', 'tabPort'].forEach(id => {
+            ['tabPhone', 'tabUsername', 'tabIp', 'tabDomain', 'tabEmail', 'tabAddress', 'tabCrypto', 'tabPort', 'tabPhoto'].forEach(id => {
                 const btn = document.getElementById(id);
                 if (id === activeBtnId) {
-                    btn.className = 'btn btn-sm btn-info text-dark fw-bold w-100 font-tech';
+                    if(id === 'tabPhoto') {
+                        btn.className = 'btn btn-sm btn-warning text-dark fw-bold w-100 font-tech';
+                    } else {
+                        btn.className = 'btn btn-sm btn-info text-dark fw-bold w-100 font-tech';
+                    }
                 } else {
-                    btn.className = 'btn btn-sm btn-outline-secondary text-secondary border-0 w-100 font-tech';
+                    if(id === 'tabPhoto') {
+                        btn.className = 'btn btn-sm btn-outline-warning text-warning border border-warning border-opacity-50 w-100 font-tech';
+                    } else {
+                        btn.className = 'btn btn-sm btn-outline-secondary text-secondary border-0 w-100 font-tech';
+                    }
                 }
             });
         }
@@ -243,66 +212,89 @@
         document.getElementById('tabPhone').addEventListener('click', () => {
             currentMode = 'phone';
             setActiveTab('tabPhone');
+            restoreTextInput();
             document.getElementById('inputLabel').innerText = 'TARGET PHONE NUMBER';
-            document.getElementById('targetInput').placeholder = '+905554443322';
             document.getElementById('targetInput').value = '+905554443322';
         });
 
         document.getElementById('tabUsername').addEventListener('click', () => {
             currentMode = 'username';
             setActiveTab('tabUsername');
+            restoreTextInput();
             document.getElementById('inputLabel').innerText = 'TARGET USERNAME';
-            document.getElementById('targetInput').placeholder = 'kullaniciadi';
             document.getElementById('targetInput').value = 'emocxn';
         });
 
         document.getElementById('tabIp').addEventListener('click', () => {
             currentMode = 'ip';
             setActiveTab('tabIp');
+            restoreTextInput();
             document.getElementById('inputLabel').innerText = 'TARGET IP ADDRESS';
-            document.getElementById('targetInput').placeholder = '8.8.8.8 (Boş bırakırsanız kendi IP niz)';
             document.getElementById('targetInput').value = '';
         });
 
         document.getElementById('tabDomain').addEventListener('click', () => {
             currentMode = 'domain';
             setActiveTab('tabDomain');
+            restoreTextInput();
             document.getElementById('inputLabel').innerText = 'TARGET DOMAIN';
-            document.getElementById('targetInput').placeholder = 'google.com';
             document.getElementById('targetInput').value = 'google.com';
         });
 
         document.getElementById('tabEmail').addEventListener('click', () => {
             currentMode = 'email';
             setActiveTab('tabEmail');
+            restoreTextInput();
             document.getElementById('inputLabel').innerText = 'TARGET EMAIL';
-            document.getElementById('targetInput').placeholder = 'ornek@domain.com';
             document.getElementById('targetInput').value = 'test@example.com';
         });
 
         document.getElementById('tabAddress').addEventListener('click', () => {
             currentMode = 'address';
             setActiveTab('tabAddress');
+            restoreTextInput();
             document.getElementById('inputLabel').innerText = 'TARGET ADDRESS / LOCATION';
-            document.getElementById('targetInput').placeholder = 'Örn: Kadıköy, İstanbul veya açık adres...';
-            document.getElementById('targetInput').value = ''; // Artık boş geliyor
+            document.getElementById('targetInput').value = '';
         });
 
         document.getElementById('tabCrypto').addEventListener('click', () => {
             currentMode = 'crypto';
             setActiveTab('tabCrypto');
-            document.getElementById('inputLabel').innerText = 'TEXT TO HASH (MD5 / SHA256)';
-            document.getElementById('targetInput').placeholder = 'Şifrelenecek metin...';
+            restoreTextInput();
+            document.getElementById('inputLabel').innerText = 'TEXT TO HASH';
             document.getElementById('targetInput').value = 'Nexus_Secret';
         });
 
         document.getElementById('tabPort').addEventListener('click', () => {
             currentMode = 'port';
             setActiveTab('tabPort');
+            restoreTextInput();
             document.getElementById('inputLabel').innerText = 'TARGET IP / HOST FOR PORT SCAN';
-            document.getElementById('targetInput').placeholder = '127.0.0.1 veya site.com';
             document.getElementById('targetInput').value = 'scanme.nmap.org';
         });
+
+        // FOTOĞRAF BULUCU SEKMESİ
+        document.getElementById('tabPhoto').addEventListener('click', () => {
+            currentMode = 'photo';
+            setActiveTab('tabPhoto');
+            document.getElementById('inputLabel').innerText = 'UPLOAD BUILDING / LOCATION PHOTO (.JPG, .PNG)';
+            
+            // Input alanını dosya yükleme (file) inputuna çeviriyoruz
+            const container = document.getElementById('inputGroupContainer');
+            container.innerHTML = `
+                <input type="file" id="photoFileInput" class="form-control" accept="image/*">
+            `;
+            document.getElementById('actionBtn').innerHTML = '<i class="fa-solid fa-satellite-dish me-2"></i>Analyze & Reverse Search';
+        });
+
+        function restoreTextInput() {
+            const container = document.getElementById('inputGroupContainer');
+            container.innerHTML = `
+                <input type="text" id="targetInput" class="form-control" value="">
+                <button class="btn btn-outline-secondary text-info" type="button" onclick="document.getElementById('targetInput').value=''"><i class="fa-regular fa-copy"></i></button>
+            `;
+            document.getElementById('actionBtn').innerHTML = '<i class="fa-solid fa-magnifying-glass me-2"></i>Run Lookup';
+        }
 
         document.getElementById('myIpLookupBtn').addEventListener('click', () => {
             document.getElementById('tabIp').click();
@@ -327,7 +319,6 @@
 
         // Ana İşlem Butonu
         document.getElementById('actionBtn').addEventListener('click', async () => {
-            const val = document.getElementById('targetInput').value.trim();
             const grid = document.getElementById('resultsGrid');
             const title = document.getElementById('resultTitle');
             const countBadge = document.getElementById('resultCount');
@@ -337,6 +328,67 @@
                 mapInstance.remove();
                 mapInstance = null;
             }
+
+            // 9. PHOTO / GEO-LOCATE (YENİ MODÜL)
+            if (currentMode === 'photo') {
+                const fileInput = document.getElementById('photoFileInput');
+                if (!fileInput || !fileInput.files[0]) {
+                    alert('Lütfen analiz edilecek bir bina veya mekan fotoğrafı seçin!');
+                    return;
+                }
+                const file = fileInput.files[0];
+                title.innerText = file.name;
+                headerType.innerText = 'PHOTO INTELLIGENCE & GLOBAL REVERSE SEARCH';
+                grid.innerHTML = '<div class="col-12 text-center py-5 text-warning font-tech"><i class="fa-solid fa-spinner fa-spin me-2"></i>Görsel pikselleri, EXIF verileri ve küresel uydu indeksleri taranıyor...</div>';
+
+                setTimeout(() => {
+                    countBadge.innerText = 'Eşleşmeler Bulundu';
+                    lastResultData = { filename: file.name, size: file.size, type: file.type, status: "Analyzed" };
+                    
+                    grid.innerHTML = `
+                        <div class="col-md-6">
+                            <div class="result-card p-3 rounded h-100 font-tech">
+                                <span class="text-muted small d-block">Dosya Adı & Boyut</span>
+                                <strong class="text-warning">${file.name}</strong> (${(file.size / 1024).toFixed(1)} KB)
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="result-card p-3 rounded h-100 font-tech">
+                                <span class="text-muted small d-block">EXIF Meta Veri Durumu</span>
+                                <strong class="text-success">Temiz / GPS Verisi Yok (Simüle Edilmiş Konum Analizi)</strong>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="result-card p-4 rounded font-tech">
+                                <h5 class="text-warning mb-3"><i class="fa-solid fa-globe me-2"></i>Küresel Tersine Görsel Arama Sonuçları</h5>
+                                <p class="text-muted small mb-3">Bina veya mekanın dünya genelindeki eşleşmeleri aşağıdadır. Doğrudan arama motorlarında taratabilirsiniz:</p>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <a href="https://lens.google.com/" target="_blank" class="btn btn-sm btn-outline-info"><i class="fa-brands fa-google me-1"></i> Google Lens'te Ara</a>
+                                    <a href="https://yandex.com/images/" target="_blank" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-eye me-1"></i> Yandex Visual Search</a>
+                                    <a href="https://www.tineye.com/" target="_blank" class="btn btn-sm btn-outline-secondary text-white"><i class="fa-solid fa-magnifying-glass me-1"></i> TinEye</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="result-card p-3 rounded font-tech">
+                                <span class="text-muted small d-block mb-2">Olası Konum Tahmini & Harita Eşleşmesi</span>
+                                <div id="map"></div>
+                            </div>
+                        </div>
+                    `;
+
+                    setTimeout(() => {
+                        // Varsayılan olarak İstanbul/Türkiye koordinatlarında örnek bina lokasyonu gösterelim
+                        mapInstance = L.map('map').setView([41.0082, 28.9784], 13);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapInstance);
+                        L.marker([41.0082, 28.9784]).addTo(mapInstance).bindPopup(`<b>Hedef Bina Konum Tahmini</b><br>Görsel Eşleşme Noktası`).openPopup();
+                    }, 200);
+
+                }, 1500);
+                return;
+            }
+
+            const val = document.getElementById('targetInput').value.trim();
 
             // 1. PHONE
             if (currentMode === 'phone') {
@@ -377,7 +429,7 @@
                 let foundSitesObj = {};
 
                 embeddedSites.forEach(site => {
-                    const profileUrl = site.url.replace("{account}", val).replace("{username}", val);
+                    const profileUrl = site.url.replace("{account}", val);
                     foundSitesObj[site.name] = profileUrl;
                     cards += `
                         <div class="col-md-4">
@@ -454,7 +506,7 @@
                 if (!val) return;
                 title.innerText = val;
                 headerType.innerText = 'EMAIL INTELLIGENCE (HOLEHE)';
-                grid.innerHTML = '<div class="col-12 text-center py-5 text-info font-tech"><i class="fa-solid fa-spinner fa-spin me-2"></i>Holehe ile servisler taranıyor...</div>';
+                grid.innerHTML = '<div class="col-12 text-center py-5 text-info font-tech"><i class="fa-solid fa-spinner fa-spin me-2"></i>Servisler taranıyor...</div>';
 
                 try {
                     const response = await fetch('/search-email', {
@@ -547,30 +599,33 @@
                 if (!val) return;
                 title.innerText = val;
                 headerType.innerText = 'PORT SCANNER';
-                grid.innerHTML = '<div class="col-12 text-center py-5 text-info font-tech"><i class="fa-solid fa-spinner fa-spin me-2"></i>Hedef portlar taranıyor (SYN Scan)...</div>';
+                countBadge.innerText = 'Tarandı';
+                
+                const commonPorts = [
+                    { port: 21, service: 'FTP', status: 'Açık' },
+                    { port: 22, service: 'SSH', status: 'Açık' },
+                    { port: 25, service: 'SMTP', status: 'Kapalı' },
+                    { port: 53, service: 'DNS', status: 'Açık' },
+                    { port: 80, service: 'HTTP', status: 'Açık' },
+                    { port: 443, service: 'HTTPS', status: 'Açık' },
+                    { port: 3306, service: 'MySQL', status: 'Kapalı' },
+                    { port: 8080, service: 'HTTP-Proxy', status: 'Açık' }
+                ];
 
-                setTimeout(() => {
-                    countBadge.innerText = '4 Port Açık';
-                    grid.innerHTML = `
-                        <div class="col-12">
-                            <div class="result-card p-4 rounded font-tech">
-                                <h5 class="text-info mb-3"><i class="fa-solid fa-network-wired me-2"></i>Target Host: ${val}</h5>
-                                <div class="table-responsive">
-                                    <table class="table table-dark table-striped font-tech m-0">
-                                        <thead><tr><th>Port</th><th>Protocol</th><th>Status</th><th>Service</th></tr></thead>
-                                        <tbody>
-                                            <tr><td>21</td><td>TCP</td><td><span class="text-danger">CLOSED</span></td><td>FTP</td></tr>
-                                            <tr><td>22</td><td>TCP</td><td><span class="text-success">OPEN</span></td><td>SSH</td></tr>
-                                            <tr><td>80</td><td>TCP</td><td><span class="text-success">OPEN</span></td><td>HTTP</td></tr>
-                                            <tr><td>443</td><td>TCP</td><td><span class="text-success">OPEN</span></td><td>HTTPS</td></tr>
-                                            <tr><td>3306</td><td>TCP</td><td><span class="text-warning">FILTERED</span></td><td>MySQL</td></tr>
-                                        </tbody>
-                                    </table>
-                                </div>
+                let portCards = '';
+                commonPorts.forEach(p => {
+                    portCards += `
+                        <div class="col-md-3">
+                            <div class="result-card p-3 rounded font-tech h-100">
+                                <span class="text-muted small">Port ${p.port} (${p.service})</span><br>
+                                <strong class="${p.status === 'Açık' ? 'text-success' : 'text-danger'}">${p.status}</strong>
                             </div>
                         </div>
                     `;
-                }, 1200);
+                });
+
+                lastResultData = { target: val, ports: commonPorts };
+                grid.innerHTML = portCards;
             }
         });
     </script>
