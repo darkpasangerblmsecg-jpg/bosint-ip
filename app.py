@@ -61,7 +61,7 @@ def search_phone():
         "source": "HLR Lookup & Telecom Registry"
     })
 
-# 2. Sosyal Medya / Kullanıcı Adı Tarama Modülü (sites.json Desteği)
+# 2. Sosyal Medya / Kullanıcı Adı Tarama Modülü (Gelişmiş Yol Kontrolü ile)
 @app.route("/search")
 def search_username():
     username = request.args.get("username", "").strip()
@@ -69,27 +69,35 @@ def search_username():
         return jsonify({"found_sites": {}})
 
     base_dir = os.path.abspath(os.path.dirname(__file__))
-    json_path = os.path.join(base_dir, "sites.json")
+    cwd = os.getcwd()
+    
+    # Olası tüm dosya yollarını ve isimlerini kontrol et
+    possible_paths = [
+        os.path.join(base_dir, "sites.json"),
+        os.path.join(base_dir, "wmn-data.json"),
+        os.path.join(cwd, "sites.json"),
+        os.path.join(cwd, "wmn-data.json")
+    ]
+    
     found_sites = {}
 
-    try:
+    for json_path in possible_paths:
         if os.path.exists(json_path):
-            with open(json_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                
-                sites_list = data if isinstance(data, list) else data.get("sites", [])
-                
-                for site in sites_list:
-                    name = site.get("name") or site.get("app")
-                    uri_template = site.get("uri_check") or site.get("url") or site.get("url_probe")
+            try:
+                with open(json_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    sites_list = data if isinstance(data, list) else data.get("sites", [])
                     
-                    if name and uri_template:
-                        url = uri_template.replace("{account}", username).replace("{username}", username)
-                        found_sites[name] = url
-        else:
-            print(f"[-] UYARI: sites.json dosyası şu konumda bulunamadı: {json_path}")
-    except Exception as e:
-        print(f"[-] JSON Okuma Hatası: {e}")
+                    for site in sites_list:
+                        name = site.get("name") or site.get("app")
+                        uri_template = site.get("uri_check") or site.get("url") or site.get("url_probe")
+                        
+                        if name and uri_template:
+                            url = uri_template.replace("{account}", username).replace("{username}", username)
+                            found_sites[name] = url
+                    break # Dosya başarıyla okunduysa döngüyü kır
+            except Exception as e:
+                print(f"[-] JSON Okuma Hatası ({json_path}): {e}")
 
     return jsonify({"found_sites": found_sites})
 
