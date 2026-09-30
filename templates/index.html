@@ -192,7 +192,6 @@
             document.getElementById('inputLabel').innerText = 'TARGET PHONE NUMBER';
             document.getElementById('targetInput').placeholder = '+905554443322';
             document.getElementById('targetInput').value = '+905554443322';
-            document.getElementById('inputSection').style.display = 'block';
         });
 
         document.getElementById('tabUsername').addEventListener('click', () => {
@@ -201,7 +200,6 @@
             document.getElementById('inputLabel').innerText = 'TARGET USERNAME';
             document.getElementById('targetInput').placeholder = 'kullaniciadi';
             document.getElementById('targetInput').value = 'emocxn';
-            document.getElementById('inputSection').style.display = 'block';
         });
 
         document.getElementById('tabIp').addEventListener('click', () => {
@@ -210,7 +208,6 @@
             document.getElementById('inputLabel').innerText = 'TARGET IP ADDRESS';
             document.getElementById('targetInput').placeholder = '8.8.8.8 (Boş bırakırsanız kendi IP niz)';
             document.getElementById('targetInput').value = '';
-            document.getElementById('inputSection').style.display = 'block';
         });
 
         document.getElementById('tabDomain').addEventListener('click', () => {
@@ -219,16 +216,14 @@
             document.getElementById('inputLabel').innerText = 'TARGET DOMAIN';
             document.getElementById('targetInput').placeholder = 'google.com';
             document.getElementById('targetInput').value = 'google.com';
-            document.getElementById('inputSection').style.display = 'block';
         });
 
         document.getElementById('tabEmail').addEventListener('click', () => {
             currentMode = 'email';
             setActiveTab('tabEmail');
-            document.getElementById('inputLabel').innerText = 'TARGET EMAIL (Holehe Scan)';
+            document.getElementById('inputLabel').innerText = 'TARGET EMAIL';
             document.getElementById('targetInput').placeholder = 'ornek@domain.com';
             document.getElementById('targetInput').value = 'test@example.com';
-            document.getElementById('inputSection').style.display = 'block';
         });
 
         document.getElementById('tabCrypto').addEventListener('click', () => {
@@ -237,7 +232,6 @@
             document.getElementById('inputLabel').innerText = 'TEXT TO HASH (MD5 / SHA256)';
             document.getElementById('targetInput').placeholder = 'Şifrelenecek metin...';
             document.getElementById('targetInput').value = 'Nexus_Secret';
-            document.getElementById('inputSection').style.display = 'block';
         });
 
         document.getElementById('tabPort').addEventListener('click', () => {
@@ -246,7 +240,6 @@
             document.getElementById('inputLabel').innerText = 'TARGET IP / HOST FOR PORT SCAN';
             document.getElementById('targetInput').placeholder = '127.0.0.1 veya site.com';
             document.getElementById('targetInput').value = 'scanme.nmap.org';
-            document.getElementById('inputSection').style.display = 'block';
         });
 
         document.getElementById('myIpLookupBtn').addEventListener('click', () => {
@@ -311,29 +304,43 @@
                 } catch(e) { grid.innerHTML = '<div class="col-12 text-center text-danger font-tech">Bağlantı hatası!</div>'; }
             }
 
-            // 2. USERNAME
+            // 2. USERNAME (Flask Backend üzerinden sites.json taraması)
             else if (currentMode === 'username') {
                 if (!val) return;
                 title.innerText = val;
-                headerType.innerText = 'USERNAME SCAN';
-                grid.innerHTML = '<div class="col-12 text-center py-5 text-info font-tech"><i class="fa-solid fa-spinner fa-spin me-2"></i>Sosyal ağlar taranıyor...</div>';
+                headerType.innerText = 'POPULAR PLATFORMS SCAN';
+                grid.innerHTML = '<div class="col-12 text-center py-5 text-info font-tech"><i class="fa-solid fa-spinner fa-spin me-2"></i>sites.json üzerinden platformlar taranıyor...</div>';
 
                 try {
-                    const res = await fetch(`/search?username=${encodeURIComponent(val)}`);
-                    const data = await res.json();
+                    const response = await fetch(`/search?username=${encodeURIComponent(val)}`);
+                    const data = await response.json();
                     lastResultData = data;
 
                     let cards = '';
-                    const entries = Object.entries(data.found_sites || {});
-                    countBadge.innerText = entries.length + ' Sonuç';
+                    const sitesObj = data.found_sites || {};
+                    const siteKeys = Object.keys(sitesObj);
 
-                    if (entries.length === 0) cards = '<div class="col-12 text-center text-muted font-tech">Eşleşme bulunamadı.</div>';
-                    else entries.forEach(([p, u]) => {
-                        cards += `<div class="col-md-6"><div class="result-card p-3 rounded font-tech"><span class="text-info fw-bold">${p.toUpperCase()}</span><br><a href="${u}" target="_blank" class="text-white text-truncate d-block" style="font-size:12px;">${u}</a></div></div>`;
-                    });
-
-                    grid.innerHTML = cards;
-                } catch(e) { grid.innerHTML = '<div class="col-12 text-center text-danger font-tech">Username tarama hatası.</div>'; }
+                    if (siteKeys.length > 0) {
+                        siteKeys.forEach(siteName => {
+                            const profileUrl = sitesObj[siteName];
+                            cards += `
+                                <div class="col-md-4">
+                                    <div class="result-card p-3 rounded font-tech h-100">
+                                        <span class="text-info fw-bold"><i class="fa-solid fa-globe me-1"></i> ${siteName}</span><br>
+                                        <a href="${profileUrl}" target="_blank" class="text-white text-truncate d-block mt-2" style="font-size:11px;">${profileUrl}</a>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        countBadge.innerText = siteKeys.length + ' Platform';
+                        grid.innerHTML = cards;
+                    } else {
+                        countBadge.innerText = '0 Sonuç';
+                        grid.innerHTML = `<div class="col-12"><div class="result-card p-4 rounded text-center text-muted font-tech">sites.json okunamadı veya eşleşme bulunamadı.</div></div>`;
+                    }
+                } catch (e) {
+                    grid.innerHTML = '<div class="col-12 text-center text-danger font-tech">Sunucu bağlantı hatası!</div>';
+                }
             }
 
             // 3. IP / GEOLOCATION
@@ -391,48 +398,50 @@
                 } catch(e) { grid.innerHTML = '<div class="col-12 text-center text-danger font-tech">DNS hata.</div>'; }
             }
 
-            // 5. EMAIL (HOLEHE)
+            // 5. EMAIL (Holehe Backend İstihbarat)
             else if (currentMode === 'email') {
                 if (!val) return;
                 title.innerText = val;
-                headerType.innerText = 'EMAIL INTELLIGENCE (Holehe)';
-                grid.innerHTML = '<div class="col-12 text-center py-5 text-info font-tech"><i class="fa-solid fa-spinner fa-spin me-2"></i>Holehe ile aktif servisler taranıyor...</div>';
+                headerType.innerText = 'EMAIL INTELLIGENCE (HOLEHE)';
+                grid.innerHTML = '<div class="col-12 text-center py-5 text-info font-tech"><i class="fa-solid fa-spinner fa-spin me-2"></i>Holehe ile servisler taranıyor (bu işlem 10-30 sn sürebilir)...</div>';
 
                 try {
-                    const res = await fetch('/search-email', {
+                    const response = await fetch('/search-email', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ email: val })
                     });
-                    const data = await res.json();
+                    const data = await response.json();
                     lastResultData = data;
 
-                    if (!data.success) throw new Error(data.error || 'Tarama başarısız.');
+                    if (data.success) {
+                        let regCards = '';
+                        if (data.registered && data.registered.length > 0) {
+                            data.registered.forEach(reg => {
+                                regCards += `
+                                    <div class="col-md-4">
+                                        <div class="result-card p-3 rounded font-tech h-100 border-success">
+                                            <span class="text-success fw-bold"><i class="fa-solid fa-check-circle me-1"></i> ${reg.name}</span><br>
+                                            <span class="text-muted small">${reg.domain}</span>
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                        } else {
+                            regCards = '<div class="col-12 text-muted text-center">Kayıtlı platform bulunamadı.</div>';
+                        }
 
-                    const registered = data.registered || [];
-                    countBadge.innerText = registered.length + ' Servis Bulundu';
-
-                    let serviceList = '';
-                    if (registered.length === 0) {
-                        serviceList = '<li class="list-group-item bg-dark text-muted border-secondary">Kayıtlı aktif servis bulunamadı.</li>';
+                        countBadge.innerText = (data.registered ? data.registered.length : 0) + ' Eşleşme';
+                        grid.innerHTML = `
+                            <div class="col-12 mb-3"><div class="result-card p-3 rounded font-tech"><strong class="text-info">Taranan Toplam Servis:</strong> ${data.total_checked}</div></div>
+                            ${regCards}
+                        `;
                     } else {
-                        registered.forEach(s => {
-                            serviceList += `<li class="list-group-item bg-dark text-white border-secondary mb-1">🟢 <strong>${s.name}</strong> (${s.domain})</li>`;
-                        });
+                        countBadge.innerText = 'Hata';
+                        grid.innerHTML = `<div class="col-12"><div class="result-card p-4 rounded text-center text-danger font-tech">${data.error}</div></div>`;
                     }
-
-                    grid.innerHTML = `
-                        <div class="col-12">
-                            <div class="result-card p-4 rounded font-tech">
-                                <h5 class="text-info mb-3"><i class="fa-solid fa-at me-2"></i>Holehe E-posta Taraması Sonucu</h5>
-                                <p class="mb-2"><strong>E-posta:</strong> ${data.email}</p>
-                                <p class="mb-3 text-muted small">Taranan toplam servis: ${data.total_checked}</p>
-                                <ul class="list-group bg-transparent">${serviceList}</ul>
-                            </div>
-                        </div>
-                    `;
-                } catch(e) {
-                    grid.innerHTML = `<div class="col-12 text-center text-danger font-tech">Holehe Tarama Hatası: ${e.message}</div>`;
+                } catch (e) {
+                    grid.innerHTML = '<div class="col-12 text-center text-danger font-tech">Sunucu bağlantı hatası!</div>';
                 }
             }
 
@@ -441,7 +450,6 @@
                 if (!val) return;
                 title.innerText = "Hash Suite";
                 headerType.innerText = 'CRYPTO HASH GENERATOR';
-                
                 countBadge.innerText = 'Üretildi';
                 grid.innerHTML = `
                     <div class="col-12">

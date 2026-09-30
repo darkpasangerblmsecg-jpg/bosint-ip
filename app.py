@@ -32,14 +32,12 @@ def search_phone():
             "source": "Lokal Rehber"
         })
 
-    # Dinamik Operatör Tespiti (Türkiye Kodlarına Göre)
     clean_phone = phone.replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
     operator = "Global / Uluslararası Operatör"
     line_type = "Mobil / Sabit Hat"
     location = "Global / Yurt Dışı Lokasyon"
 
     if "+90" in clean_phone or clean_phone.startswith("90") or clean_phone.startswith("05") or clean_phone.startswith("5"):
-        # Operatör kodunu yakala (Örn: 53x -> Turkcell, 54x -> Vodafone, 50x/55x -> Turk Telekom)
         if "53" in clean_phone:
             operator = "Turkcell TR"
         elif "54" in clean_phone:
@@ -63,7 +61,7 @@ def search_phone():
         "source": "HLR Lookup & Telecom Registry"
     })
 
-# 2. Sosyal Medya / Kullanıcı Adı Tarama Modülü (Esnek JSON Desteği)
+# 2. Sosyal Medya / Kullanıcı Adı Tarama Modülü (sites.json Desteği)
 @app.route("/search")
 def search_username():
     username = request.args.get("username", "").strip()
@@ -79,12 +77,10 @@ def search_username():
             with open(json_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 
-                # JSON formatı ister liste [..] ister dict {"sites": [...]} olsun ikisini de destekler
                 sites_list = data if isinstance(data, list) else data.get("sites", [])
                 
                 for site in sites_list:
                     name = site.get("name") or site.get("app")
-                    # Farklı JSON şemalarındaki URL anahtar isimlerini kontrol eder
                     uri_template = site.get("uri_check") or site.get("url") or site.get("url_probe")
                     
                     if name and uri_template:
@@ -97,7 +93,7 @@ def search_username():
 
     return jsonify({"found_sites": found_sites})
 
-# 3. Holehe E-posta İstihbarat Modülü (Hata Toleranslı)
+# 3. Holehe E-posta İstihbarat Modülü
 @app.route("/search-email", methods=["POST"])
 def search_email():
     data = request.get_json() or {}
@@ -107,7 +103,6 @@ def search_email():
         return jsonify({"success": False, "error": "E-posta adresi gerekli"}), 400
 
     try:
-        # Holehe komutunu çalıştır
         process = subprocess.run(
             ['holehe', email, '--no-color', '--json'],
             capture_output=True,
@@ -137,7 +132,7 @@ def search_email():
         })
         
     except FileNotFoundError:
-        return jsonify({"success": False, "error": "Sistemde 'holehe' aracı kurulu değil veya PATH üzerinde bulunamadı."}), 500
+        return jsonify({"success": False, "error": "Sistemde 'holehe' aracı kurulu değil."}), 500
     except subprocess.TimeoutExpired:
         return jsonify({"success": False, "error": "Tarama zaman aşımına uğradı."}), 500
     except Exception as e:
