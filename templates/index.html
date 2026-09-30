@@ -105,8 +105,9 @@
                         <div class="col-4"><button id="tabIp" class="btn btn-sm btn-outline-secondary text-secondary border-0 w-100 font-tech">IP / Geo</button></div>
                         <div class="col-4 mt-1"><button id="tabDomain" class="btn btn-sm btn-outline-secondary text-secondary border-0 w-100 font-tech">Domain</button></div>
                         <div class="col-4 mt-1"><button id="tabEmail" class="btn btn-sm btn-outline-secondary text-secondary border-0 w-100 font-tech">Email</button></div>
-                        <div class="col-4 mt-1"><button id="tabCrypto" class="btn btn-sm btn-outline-secondary text-secondary border-0 w-100 font-tech">Hash</button></div>
-                        <div class="col-12 mt-1"><button id="tabPort" class="btn btn-sm btn-outline-secondary text-secondary border-0 w-100 font-tech">Port Scanner</button></div>
+                        <div class="col-4 mt-1"><button id="tabAddress" class="btn btn-sm btn-outline-secondary text-secondary border-0 w-100 font-tech">Address</button></div>
+                        <div class="col-6 mt-1"><button id="tabCrypto" class="btn btn-sm btn-outline-secondary text-secondary border-0 w-100 font-tech">Hash</button></div>
+                        <div class="col-6 mt-1"><button id="tabPort" class="btn btn-sm btn-outline-secondary text-secondary border-0 w-100 font-tech">Port Scanner</button></div>
                     </div>
 
                     <!-- Input Alanı -->
@@ -174,7 +175,6 @@
         let mapInstance = null;
         let lastResultData = null;
 
-        // Dahili 50 Popüler Platform Listesi (HTML/JS İçerisinde)
         const embeddedSites = [
             { name: "Instagram", url: "https://www.instagram.com/{account}" },
             { name: "Facebook", url: "https://www.facebook.com/{account}" },
@@ -229,7 +229,7 @@
         ];
 
         function setActiveTab(activeBtnId) {
-            ['tabPhone', 'tabUsername', 'tabIp', 'tabDomain', 'tabEmail', 'tabCrypto', 'tabPort'].forEach(id => {
+            ['tabPhone', 'tabUsername', 'tabIp', 'tabDomain', 'tabEmail', 'tabAddress', 'tabCrypto', 'tabPort'].forEach(id => {
                 const btn = document.getElementById(id);
                 if (id === activeBtnId) {
                     btn.className = 'btn btn-sm btn-info text-dark fw-bold w-100 font-tech';
@@ -278,6 +278,14 @@
             document.getElementById('inputLabel').innerText = 'TARGET EMAIL';
             document.getElementById('targetInput').placeholder = 'ornek@domain.com';
             document.getElementById('targetInput').value = 'test@example.com';
+        });
+
+        document.getElementById('tabAddress').addEventListener('click', () => {
+            currentMode = 'address';
+            setActiveTab('tabAddress');
+            document.getElementById('inputLabel').innerText = 'TARGET ADDRESS / LOCATION';
+            document.getElementById('targetInput').placeholder = 'Silivri çelikler sitesi apt daire 14';
+            document.getElementById('targetInput').value = 'Silivri çelikler sitesi apt daire 14';
         });
 
         document.getElementById('tabCrypto').addEventListener('click', () => {
@@ -358,7 +366,7 @@
                 } catch(e) { grid.innerHTML = '<div class="col-12 text-center text-danger font-tech">Bağlantı hatası!</div>'; }
             }
 
-            // 2. USERNAME (Doğrudan HTML içerisindeki diziden tarama)
+            // 2. USERNAME
             else if (currentMode === 'username') {
                 if (!val) return;
                 title.innerText = val;
@@ -441,12 +449,12 @@
                 } catch(e) { grid.innerHTML = '<div class="col-12 text-center text-danger font-tech">DNS hata.</div>'; }
             }
 
-            // 5. EMAIL (Holehe Backend İstihbarat)
+            // 5. EMAIL
             else if (currentMode === 'email') {
                 if (!val) return;
                 title.innerText = val;
                 headerType.innerText = 'EMAIL INTELLIGENCE (HOLEHE)';
-                grid.innerHTML = '<div class="col-12 text-center py-5 text-info font-tech"><i class="fa-solid fa-spinner fa-spin me-2"></i>Holehe ile servisler taranıyor (bu işlem 10-30 sn sürebilir)...</div>';
+                grid.innerHTML = '<div class="col-12 text-center py-5 text-info font-tech"><i class="fa-solid fa-spinner fa-spin me-2"></i>Holehe ile servisler taranıyor...</div>';
 
                 try {
                     const response = await fetch('/search-email', {
@@ -488,7 +496,34 @@
                 }
             }
 
-            // 6. CRYPTO / HASH
+            // 6. ADDRESS / LOCATION LOOKUP (Yeni Eklenen Harita Özelliği)
+            else if (currentMode === 'address') {
+                if (!val) return;
+                title.innerText = val;
+                headerType.innerText = 'ADDRESS & LOCATION MAP';
+                countBadge.innerText = 'Haritalandı';
+                lastResultData = { query_address: val };
+
+                grid.innerHTML = `
+                    <div class="col-12">
+                        <div class="result-card p-3 rounded font-tech">
+                            <span class="text-muted small d-block mb-2"><i class="fa-solid fa-map-location-dot me-1"></i> HEDEF ADRES / LOKASYON: <strong class="text-info">${val}</strong></span>
+                            <div style="width: 100%; height: 350px; border-radius: 6px; overflow: hidden; border: 1px solid #374151;">
+                                <iframe 
+                                    width="100%" 
+                                    height="100%" 
+                                    style="border:0;" 
+                                    loading="lazy" 
+                                    allowfullscreen 
+                                    src="https://maps.google.com/maps?q=${encodeURIComponent(val)}&t=&z=16&ie=UTF8&iwloc=&output=embed">
+                                </iframe>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 7. CRYPTO / HASH
             else if (currentMode === 'crypto') {
                 if (!val) return;
                 title.innerText = "Hash Suite";
@@ -507,7 +542,7 @@
                 `;
             }
 
-            // 7. PORT SCANNER
+            // 8. PORT SCANNER
             else if (currentMode === 'port') {
                 if (!val) return;
                 title.innerText = val;
