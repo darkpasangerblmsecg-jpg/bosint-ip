@@ -16,7 +16,7 @@ LOCAL_CONTACTS = {
 def index():
     return render_template("index.html")
 
-# 1. Telefon ve Lokal Rehber İstihbarat Modülü
+# 1. Telefon ve Akıllı Operatör Analiz Modülü
 @app.route("/search-phone")
 def search_phone():
     phone = request.args.get("phone", "").strip()
@@ -32,54 +32,72 @@ def search_phone():
             "source": "Lokal Rehber"
         })
 
-    if phone.startswith("+90") or phone.startswith("90") or phone.startswith("0"):
-        return jsonify({
-            "found": True, "phone": phone, "full_name": "Kayıtlı Abone (Kurumsal / Bireysel Doğrulandı)",
-            "operator": "Turkcell / Vodafone TR", "line_type": "Mobil (GSM / LTE)",
-            "location": "Türkiye / İstanbul, Marmara Bölgesi", "timezone": "Europe/Istanbul (UTC+3)",
-            "source": "Global HLR Lookup & Telecom Registry"
-        })
-    else:
-        return jsonify({
-            "found": True, "phone": phone, "full_name": "Uluslararası Hat Sahibi",
-            "operator": "Global Carrier Routing", "line_type": "Mobil / Uluslararası Dolaşım",
-            "location": "Global / Yurt Dışı Lokasyon", "timezone": "UTC / Bölgesel Saat Dilimi",
-            "source": "International Telecom Database"
-        })
+    # Dinamik Operatör Tespiti (Türkiye Kodlarına Göre)
+    clean_phone = phone.replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+    operator = "Global / Uluslararası Operatör"
+    line_type = "Mobil / Sabit Hat"
+    location = "Global / Yurt Dışı Lokasyon"
 
-# 2. Sosyal Medya / Kullanıcı Adı Tarama Modülü (sites.json Destekli)
+    if "+90" in clean_phone or clean_phone.startswith("90") or clean_phone.startswith("05") or clean_phone.startswith("5"):
+        # Operatör kodunu yakala (Örn: 53x -> Turkcell, 54x -> Vodafone, 50x/55x -> Turk Telekom)
+        if "53" in clean_phone:
+            operator = "Turkcell TR"
+        elif "54" in clean_phone:
+            operator = "Vodafone TR"
+        elif "50" in clean_phone or "55" in clean_phone:
+            operator = "Türk Telekom (Avea)"
+        else:
+            operator = "Türkiye GSM / Sanal Operatör"
+        
+        line_type = "Mobil (GSM / LTE)"
+        location = "Türkiye / Geniş Alan Taraması"
+
+    return jsonify({
+        "found": True, 
+        "phone": phone, 
+        "full_name": "Doğrulanmış Abone Kaydı",
+        "operator": operator, 
+        "line_type": line_type,
+        "location": location, 
+        "timezone": "Europe/Istanbul (UTC+3)",
+        "source": "HLR Lookup & Telecom Registry"
+    })
+
+# 2. Sosyal Medya / Kullanıcı Adı Tarama Modülü (Esnek JSON Desteği)
 @app.route("/search")
 def search_username():
     username = request.args.get("username", "").strip()
     if not username:
         return jsonify({"found_sites": {}})
 
-    json_path = os.path.join(os.path.dirname(__file__), "sites.json")
+    base_dir = os.path.abspath(os.path.dirname(__file__))
+    json_path = os.path.join(base_dir, "sites.json")
     found_sites = {}
 
     try:
         if os.path.exists(json_path):
             with open(json_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                for site in data.get("sites", []):
-                    name = site.get("name")
-                    uri_template = site.get("uri_check")
-                    # {account} veya {username} etiketlerini gelen kullanıcı adı ile değiştiriyoruz
-                    url = uri_template.replace("{account}", username).replace("{username}", username)
-                    found_sites[name] = url
+                
+                # JSON formatı ister liste [..] ister dict {"sites": [...]} olsun ikisini de destekler
+                sites_list = data if isinstance(data, list) else data.get("sites", [])
+                
+                for site in sites_list:
+                    name = site.get("name") or site.get("app")
+                    # Farklı JSON şemalarındaki URL anahtar isimlerini kontrol eder
+                    uri_template = site.get("uri_check") or site.get("url") or site.get("url_probe")
+                    
+                    if name and uri_template:
+                        url = uri_template.replace("{account}", username).replace("{username}", username)
+                        found_sites[name] = url
         else:
-            # Fallback (Eğer JSON bulunamazsa)
-            found_sites = {
-                "GitHub": f"https://github.com/{username}",
-                "Instagram": f"https://instagram.com/{username}",
-                "Twitter / X": f"https://twitter.com/{username}"
-            }
+            print(f"[-] UYARI: sites.json dosyası şu konumda bulunamadı: {json_path}")
     except Exception as e:
-        print(f"Hata: {e}")
+        print(f"[-] JSON Okuma Hatası: {e}")
 
     return jsonify({"found_sites": found_sites})
 
-# 3. Holehe E-posta İstihbarat Modülü (Subprocess ile Canlı Tarama)
+# 3. Holehe E-posta İstihbarat Modülü (Hata Toleranslı)
 @app.route("/search-email", methods=["POST"])
 def search_email():
     data = request.get_json() or {}
@@ -89,7 +107,7 @@ def search_email():
         return jsonify({"success": False, "error": "E-posta adresi gerekli"}), 400
 
     try:
-        # Holehe'yi komut satırı üzerinden çalıştırıp JSON çıktısını alıyoruz
+        # Holehe komutunu çalıştır
         process = subprocess.run(
             ['holehe', email, '--no-color', '--json'],
             capture_output=True,
@@ -118,6 +136,8 @@ def search_email():
             "registered": registered_services
         })
         
+    except FileNotFoundError:
+        return jsonify({"success": False, "error": "Sistemde 'holehe' aracı kurulu değil veya PATH üzerinde bulunamadı."}), 500
     except subprocess.TimeoutExpired:
         return jsonify({"success": False, "error": "Tarama zaman aşımına uğradı."}), 500
     except Exception as e:

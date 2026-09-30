@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BosINT v4.5-PRO - Advanced Intelligence Suite</title>
+    <title>Nexus OSINT v4.7-PRO - Advanced Intelligence Suite</title>
     <!-- Bootstrap 5.3 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome Icons -->
@@ -82,8 +82,8 @@
                 <div class="bg-info bg-opacity-10 border border-info border-opacity-50 p-2 rounded text-info d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
                     <i class="fa-solid fa-terminal fa-sm"></i>
                 </div>
-                <span class="fw-bold font-tech fs-4 text-info">BosINT</span>
-                <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25" style="font-size: 10px;">v4.5-PRO</span>
+                <span class="fw-bold font-tech fs-4 text-info">Nexus OSINT</span>
+                <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25" style="font-size: 10px;">v4.7-PRO</span>
             </a>
             <div class="d-flex align-items-center gap-3">
                 <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 py-2 px-3 d-none d-md-inline-block">
@@ -135,7 +135,7 @@
                     <span class="small text-muted font-tech d-block mb-2"><i class="fa-solid fa-terminal me-1"></i> LIVE STREAM LOGS</span>
                     <div class="terminal-box p-2 rounded text-success" id="terminalLogs">
                         [00:00:01] System core loaded successfully.<br>
-                        [00:00:02] Modules: Phone, IP, Domain, User, Email, Hash, Port active.
+                        [00:00:02] Modules: Phone, IP, Domain, User, Email (Holehe), Hash, Port active.
                     </div>
                 </div>
 
@@ -147,7 +147,7 @@
                     </div>
                     <div id="historyBox">
                         <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2" style="background-color: #030712;">
-                            <span class="text-info small"><i class="fa-solid fa-chevron-right fa-2xs me-2"></i>Initialized v4.5</span>
+                            <span class="text-info small"><i class="fa-solid fa-chevron-right fa-2xs me-2"></i>Initialized v4.7</span>
                             <i class="fa-solid fa-check text-success" style="font-size: 12px;"></i>
                         </div>
                     </div>
@@ -249,7 +249,7 @@
         document.getElementById('tabEmail').addEventListener('click', () => {
             currentMode = 'email';
             setActiveTab('tabEmail');
-            document.getElementById('inputLabel').innerText = 'TARGET EMAIL (Breach Check)';
+            document.getElementById('inputLabel').innerText = 'TARGET EMAIL (Holehe Scan)';
             document.getElementById('targetInput').placeholder = 'ornek@domain.com';
             document.getElementById('targetInput').value = 'test@example.com';
             document.getElementById('inputSection').style.display = 'block';
@@ -260,7 +260,7 @@
             setActiveTab('tabCrypto');
             document.getElementById('inputLabel').innerText = 'TEXT TO HASH (MD5 / SHA256)';
             document.getElementById('targetInput').placeholder = 'Şifrelenecek metin...';
-            document.getElementById('targetInput').value = 'BosINT_Secret';
+            document.getElementById('targetInput').value = 'Nexus_Secret';
             document.getElementById('inputSection').style.display = 'block';
         });
 
@@ -288,7 +288,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(lastResultData, null, 4));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `BosINT_Report_${Date.now()}.json`);
+            downloadAnchor.setAttribute("download", `NexusOSINT_Report_${Date.now()}.json`);
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
@@ -422,65 +422,52 @@
                 } catch(e) { grid.innerHTML = '<div class="col-12 text-center text-danger font-tech">Username tarama hatası.</div>'; }
             }
 
-            // 5. EMAIL (BREACH CHECK)
+            // 5. EMAIL (HOLEHE BACKEND ENTEGRASYONU)
             else if (currentMode === 'email') {
                 if (!val) return;
                 title.innerText = val;
-                headerType.innerText = 'EMAIL BREACH INTELLIGENCE';
-                grid.innerHTML = '<div class="col-12 text-center py-5 text-info font-tech"><i class="fa-solid fa-spinner fa-spin me-2"></i>Veri sızıntı arşivleri taranıyor...</div>';
+                headerType.innerText = 'EMAIL INTELLIGENCE (Holehe)';
+                grid.innerHTML = '<div class="col-12 text-center py-5 text-info font-tech"><i class="fa-solid fa-spinner fa-spin me-2"></i>Holehe ile aktif servisler taranıyor...</div>';
 
                 try {
-                    const res = await fetch(`https://haveibeenpwned.com/api/v3/breachedaccount/${encodeURIComponent(val)}`, {
-                        headers: {
-                            'User-Agent': 'BosINT-Client',
-                            // 'hibp-api-key': 'BURAYA_API_KEY_GELEBILIR'
-                        }
+                    const res = await fetch('/search-email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: val })
                     });
-                    
-                    // Eğer gerçek API anahtarı yoksa veya hata dönerse esnek yapı / fallback simülasyon
-                    if (res.status === 404 || res.status === 401) {
-                        // Simülasyon verisi devreye girer
-                        throw new Error('Fallback simulation');
-                    }
-                    
                     const data = await res.json();
-                    lastResultData = { email: val, leaked: true, breaches: data };
-                    countBadge.innerText = data.length + ' İfşa Bulundu';
-                    
-                    let breachList = '';
-                    data.forEach(b => {
-                        breachList += `<li class="list-group-item bg-dark text-white border-secondary mb-1">🔴 <strong>${b.Name} (${b.BreachDate})</strong> - ${b.Description.substring(0, 100)}...</li>`;
-                    });
+                    lastResultData = data;
+
+                    if (!data.success) {
+                        throw new Error(data.error || 'Tarama başarısız.');
+                    }
+
+                    const registered = data.registered || [];
+                    countBadge.innerText = registered.length + ' Servis Bulundu';
+
+                    let serviceList = '';
+                    if (registered.length === 0) {
+                        serviceList = '<li class="list-group-item bg-dark text-muted border-secondary">Kayıtlı aktif servis bulunamadı.</li>';
+                    } else {
+                        registered.forEach(s => {
+                            serviceList += `<li class="list-group-item bg-dark text-white border-secondary mb-1">🟢 <strong>${s.name}</strong> (${s.domain})</li>`;
+                        });
+                    }
 
                     grid.innerHTML = `
                         <div class="col-12">
                             <div class="result-card p-4 rounded font-tech">
-                                <h5 class="text-danger mb-3"><i class="fa-solid fa-triangle-exclamation me-2"></i>Kritik Uyarı: Veri Sızıntısı Tespit Edildi!</h5>
-                                <p class="mb-2"><strong>E-posta:</strong> ${val}</p>
-                                <ul class="list-group bg-transparent">${breachList}</ul>
+                                <h5 class="text-info mb-3"><i class="fa-solid fa-at me-2"></i>Holehe E-posta Taraması Sonucu</h5>
+                                <p class="mb-2"><strong>E-posta:</strong> ${data.email}</p>
+                                <p class="mb-3 text-muted small">Taranan toplam servis: ${data.total_checked}</p>
+                                <ul class="list-group bg-transparent">${serviceList}</ul>
                             </div>
                         </div>
                     `;
-                    logTerminal(`Breach check complete for ${val}: ${data.length} leaks found.`);
+                    logTerminal(`Holehe email scan completed for ${val}: ${registered.length} accounts found.`);
                 } catch(e) {
-                    // Fallback / Gerçek çalışan simülasyon bloğu
-                    lastResultData = { email: val, leaked: true, breaches: ['LinkedIn (2021)', 'Adobe (2013)', 'Canva (2019)'] };
-                    countBadge.innerText = '3 İfşa Bulundu';
-                    grid.innerHTML = `
-                        <div class="col-12">
-                            <div class="result-card p-4 rounded font-tech">
-                                <h5 class="text-danger mb-3"><i class="fa-solid fa-triangle-exclamation me-2"></i>Kritik Uyarı: Veri Sızıntısı Tespit Edildi!</h5>
-                                <p class="mb-2"><strong>E-posta:</strong> ${val}</p>
-                                <p class="mb-3 text-warning">Bu e-posta adresi geçmişte aşağıdaki büyük veri sızıntılarında yer almıştır:</p>
-                                <ul class="list-group bg-transparent">
-                                    <li class="list-group-item bg-dark text-white border-secondary mb-1">🔴 <strong>LinkedIn (2021)</strong> - Şifre Hash ve İsim Bilgileri</li>
-                                    <li class="list-group-item bg-dark text-white border-secondary mb-1">🔴 <strong>Adobe (2013)</strong> - Şifre İfşası</li>
-                                    <li class="list-group-item bg-dark text-white border-secondary">🔴 <strong>Canva (2019)</strong> - Hesap Bilgileri</li>
-                                </ul>
-                            </div>
-                        </div>
-                    `;
-                    logTerminal(`Breach check fallback complete for ${val}: 3 leaks found.`);
+                    grid.innerHTML = `<div class="col-12 text-center text-danger font-tech">Holehe Tarama Hatası: ${e.message}</div>`;
+                    logTerminal(`Error in email scan: ${e.message}`);
                 }
             }
 
