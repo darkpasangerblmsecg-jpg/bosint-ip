@@ -63,14 +63,6 @@
         .leaflet-layer, .leaflet-control-zoom-in, .leaflet-control-zoom-out, .leaflet-attribution-flag {
             filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
         }
-        .terminal-box {
-            background-color: #030712;
-            border: 1px solid #1e293b;
-            font-family: var(--font-tech);
-            font-size: 12px;
-            max-height: 140px;
-            overflow-y: auto;
-        }
     </style>
 </head>
 <body>
@@ -109,12 +101,13 @@
                 <div class="card p-3 mb-4">
                     <div class="row g-1 mb-3">
                         <div class="col-4"><button id="tabPhone" class="btn btn-sm btn-info text-dark fw-bold w-100 font-tech">Phone</button></div>
+                        <div class="col-4"><button id="tabName" class="btn btn-sm btn-outline-secondary text-secondary border-0 w-100 font-tech">Name</button></div>
                         <div class="col-4"><button id="tabIp" class="btn btn-sm btn-outline-secondary text-secondary border-0 w-100 font-tech">IP / Geo</button></div>
-                        <div class="col-4"><button id="tabDomain" class="btn btn-sm btn-outline-secondary text-secondary border-0 w-100 font-tech">Domain</button></div>
+                        <div class="col-4 mt-1"><button id="tabDomain" class="btn btn-sm btn-outline-secondary text-secondary border-0 w-100 font-tech">Domain</button></div>
                         <div class="col-4 mt-1"><button id="tabUsername" class="btn btn-sm btn-outline-secondary text-secondary border-0 w-100 font-tech">User</button></div>
                         <div class="col-4 mt-1"><button id="tabEmail" class="btn btn-sm btn-outline-secondary text-secondary border-0 w-100 font-tech">Email</button></div>
                         <div class="col-4 mt-1"><button id="tabCrypto" class="btn btn-sm btn-outline-secondary text-secondary border-0 w-100 font-tech">Hash</button></div>
-                        <div class="col-12 mt-1"><button id="tabPort" class="btn btn-sm btn-outline-secondary text-secondary border-0 w-100 font-tech">Port Scanner</button></div>
+                        <div class="col-8 mt-1"><button id="tabPort" class="btn btn-sm btn-outline-secondary text-secondary border-0 w-100 font-tech">Port Scanner</button></div>
                     </div>
 
                     <!-- Input Alanı -->
@@ -127,15 +120,6 @@
                         <button id="actionBtn" class="btn btn-info text-dark w-100 fw-bold py-2 font-tech">
                             <i class="fa-solid fa-magnifying-glass me-2"></i>Run Lookup
                         </button>
-                    </div>
-                </div>
-
-                <!-- Live Terminal Logs -->
-                <div class="card p-3 mb-4">
-                    <span class="small text-muted font-tech d-block mb-2"><i class="fa-solid fa-terminal me-1"></i> LIVE STREAM LOGS</span>
-                    <div class="terminal-box p-2 rounded text-success" id="terminalLogs">
-                        [00:00:01] System core loaded successfully.<br>
-                        [00:00:02] Modules: Phone, IP, Domain, User, Email (Holehe), Hash, Port active.
                     </div>
                 </div>
 
@@ -191,15 +175,8 @@
         let mapInstance = null;
         let lastResultData = null;
 
-        function logTerminal(text) {
-            const box = document.getElementById('terminalLogs');
-            const time = new Date().toLocaleTimeString();
-            box.innerHTML += `<br>[${time}] ${text}`;
-            box.scrollTop = box.scrollHeight;
-        }
-
         function setActiveTab(activeBtnId) {
-            ['tabPhone', 'tabIp', 'tabDomain', 'tabUsername', 'tabEmail', 'tabCrypto', 'tabPort'].forEach(id => {
+            ['tabPhone', 'tabName', 'tabIp', 'tabDomain', 'tabUsername', 'tabEmail', 'tabCrypto', 'tabPort'].forEach(id => {
                 const btn = document.getElementById(id);
                 if (id === activeBtnId) {
                     btn.className = 'btn btn-sm btn-info text-dark fw-bold w-100 font-tech';
@@ -216,6 +193,15 @@
             document.getElementById('inputLabel').innerText = 'TARGET PHONE NUMBER';
             document.getElementById('targetInput').placeholder = '+905554443322';
             document.getElementById('targetInput').value = '+905554443322';
+            document.getElementById('inputSection').style.display = 'block';
+        });
+
+        document.getElementById('tabName').addEventListener('click', () => {
+            currentMode = 'name';
+            setActiveTab('tabName');
+            document.getElementById('inputLabel').innerText = 'TARGET FULL NAME';
+            document.getElementById('targetInput').placeholder = 'Ad Soyad';
+            document.getElementById('targetInput').value = 'Ahmet Yılmaz';
             document.getElementById('inputSection').style.display = 'block';
         });
 
@@ -292,7 +278,6 @@
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
-            logTerminal("Report exported successfully as JSON.");
         });
 
         // Ana İşlem Butonu
@@ -307,8 +292,6 @@
                 mapInstance.remove();
                 mapInstance = null;
             }
-
-            logTerminal(`Initiated query on mode [${currentMode.toUpperCase()}] with target: ${val || 'SELF'}`);
 
             // 1. PHONE
             if (currentMode === 'phone') {
@@ -331,7 +314,6 @@
                             <div class="col-md-6"><div class="result-card p-3 rounded h-100 font-tech"><span class="text-muted small d-block">Hat Tipi</span><strong>${data.line_type}</strong></div></div>
                             <div class="col-12"><div class="result-card p-3 rounded font-tech"><span class="text-muted small d-block">Konum / Kaynak</span><strong class="text-success">${data.location} (${data.source})</strong></div></div>
                         `;
-                        logTerminal(`Phone lookup successful for ${val}`);
                     } else {
                         countBadge.innerText = 'Bulunamadı';
                         grid.innerHTML = `<div class="col-12"><div class="result-card p-4 rounded text-center text-muted font-tech">Kayıt bulunamadı.</div></div>`;
@@ -339,7 +321,37 @@
                 } catch(e) { grid.innerHTML = '<div class="col-12 text-center text-danger font-tech">Bağlantı hatası!</div>'; }
             }
 
-            // 2. IP / GEOLOCATION
+            // 2. NAME (İsimden Sorgu / Simülasyon veya Backend endpoint)
+            else if (currentMode === 'name') {
+                if (!val) return;
+                title.innerText = val;
+                headerType.innerText = 'NAME INTELLIGENCE';
+                grid.innerHTML = '<div class="col-12 text-center py-5 text-info font-tech"><i class="fa-solid fa-spinner fa-spin me-2"></i>Kişi kayıtları taranıyor...</div>';
+
+                try {
+                    // Eğer Flask tarafında /search-name gibi bir endpointiniz varsa burayı güncelleyebilirsiniz.
+                    // Şimdilik örnek yapı:
+                    const response = await fetch(`/search-name?name=${encodeURIComponent(val)}`).catch(() => null);
+                    
+                    // Eğer backend endpoint henüz yoksa simüle edelim veya gelen veriyi işleyelim
+                    countBadge.innerText = 'Sonuçlar';
+                    grid.innerHTML = `
+                        <div class="col-12">
+                            <div class="result-card p-4 rounded font-tech">
+                                <h5 class="text-info mb-3"><i class="fa-solid fa-address-card me-2"></i>İsim Sorgu Raporu: ${val}</h5>
+                                <p class="text-muted small">Aranan kriterlere uygun olası eşleşmeler ve açık kaynak kayıtları listeleniyor.</p>
+                                <div class="alert alert-secondary bg-dark text-light border-secondary mt-3">
+                                    <i class="fa-solid fa-info-circle me-1 text-info"></i> İsim modülü için backend servisinizi kontrol edin veya detaylı arama parametresi ekleyin.
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } catch(e) { 
+                    grid.innerHTML = '<div class="col-12 text-center text-danger font-tech">İsim sorgulama modülü hatası.</div>'; 
+                }
+            }
+
+            // 3. IP / GEOLOCATION
             else if (currentMode === 'ip') {
                 title.innerText = val || 'Kendi IP Adresiniz';
                 headerType.innerText = 'IP GEOLOCATION';
@@ -364,12 +376,11 @@
                             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapInstance);
                             L.marker([data.latitude, data.longitude]).addTo(mapInstance).bindPopup(`${data.ip}`).openPopup();
                         }, 200);
-                        logTerminal(`IP Geolocated: ${data.ip} (${data.country})`);
                     }
                 } catch(e) { grid.innerHTML = '<div class="col-12 text-center text-danger font-tech">IP servisi hatası.</div>'; }
             }
 
-            // 3. DOMAIN
+            // 4. DOMAIN
             else if (currentMode === 'domain') {
                 if (!val) return;
                 title.innerText = val;
@@ -392,11 +403,10 @@
                             <div class="mt-3"><a href="https://who.is/whois/${val}" target="_blank" class="btn btn-sm btn-outline-info">Whois Raporu Aç</a></div>
                         </div></div>
                     `;
-                    logTerminal(`Domain DNS resolved for ${val}`);
                 } catch(e) { grid.innerHTML = '<div class="col-12 text-center text-danger font-tech">DNS hata.</div>'; }
             }
 
-            // 4. USERNAME
+            // 5. USERNAME
             else if (currentMode === 'username') {
                 if (!val) return;
                 title.innerText = val;
@@ -418,11 +428,10 @@
                     });
 
                     grid.innerHTML = cards;
-                    logTerminal(`Username scan finished for ${val}`);
                 } catch(e) { grid.innerHTML = '<div class="col-12 text-center text-danger font-tech">Username tarama hatası.</div>'; }
             }
 
-            // 5. EMAIL (HOLEHE BACKEND ENTEGRASYONU)
+            // 6. EMAIL (HOLEHE)
             else if (currentMode === 'email') {
                 if (!val) return;
                 title.innerText = val;
@@ -438,9 +447,7 @@
                     const data = await res.json();
                     lastResultData = data;
 
-                    if (!data.success) {
-                        throw new Error(data.error || 'Tarama başarısız.');
-                    }
+                    if (!data.success) throw new Error(data.error || 'Tarama başarısız.');
 
                     const registered = data.registered || [];
                     countBadge.innerText = registered.length + ' Servis Bulundu';
@@ -464,14 +471,12 @@
                             </div>
                         </div>
                     `;
-                    logTerminal(`Holehe email scan completed for ${val}: ${registered.length} accounts found.`);
                 } catch(e) {
                     grid.innerHTML = `<div class="col-12 text-center text-danger font-tech">Holehe Tarama Hatası: ${e.message}</div>`;
-                    logTerminal(`Error in email scan: ${e.message}`);
                 }
             }
 
-            // 6. CRYPTO / HASH
+            // 7. CRYPTO / HASH
             else if (currentMode === 'crypto') {
                 if (!val) return;
                 title.innerText = "Hash Suite";
@@ -489,10 +494,9 @@
                         </div>
                     </div>
                 `;
-                logTerminal(`Generated cryptographic hashes for input string.`);
             }
 
-            // 7. PORT SCANNER SIMULATION
+            // 8. PORT SCANNER
             else if (currentMode === 'port') {
                 if (!val) return;
                 title.innerText = val;
@@ -520,7 +524,6 @@
                             </div>
                         </div>
                     `;
-                    logTerminal(`Port scan completed on ${val}: 3 open ports detected.`);
                 }, 1200);
             }
         });
