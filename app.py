@@ -7,7 +7,6 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-# İsteğe bağlı lokal rehber
 LOCAL_CONTACTS = {
     # "+905554443322": ["Örnek Ad Soyad"],
 }
@@ -16,7 +15,6 @@ LOCAL_CONTACTS = {
 def index():
     return render_template("index.html")
 
-# 1. Telefon ve Akıllı Operatör Analiz Modülü
 @app.route("/search-phone")
 def search_phone():
     phone = request.args.get("phone", "").strip()
@@ -61,47 +59,11 @@ def search_phone():
         "source": "HLR Lookup & Telecom Registry"
     })
 
-# 2. Sosyal Medya / Kullanıcı Adı Tarama Modülü (Gelişmiş Yol Kontrolü ile)
 @app.route("/search")
 def search_username():
-    username = request.args.get("username", "").strip()
-    if not username:
-        return jsonify({"found_sites": {}})
+    # Frontend (HTML içindeki JS) üzerinden tarama yapıldığı için boş dönebilir
+    return jsonify({"found_sites": {}})
 
-    base_dir = os.path.abspath(os.path.dirname(__file__))
-    cwd = os.getcwd()
-    
-    # Olası tüm dosya yollarını ve isimlerini kontrol et
-    possible_paths = [
-        os.path.join(base_dir, "sites.json"),
-        os.path.join(base_dir, "wmn-data.json"),
-        os.path.join(cwd, "sites.json"),
-        os.path.join(cwd, "wmn-data.json")
-    ]
-    
-    found_sites = {}
-
-    for json_path in possible_paths:
-        if os.path.exists(json_path):
-            try:
-                with open(json_path, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    sites_list = data if isinstance(data, list) else data.get("sites", [])
-                    
-                    for site in sites_list:
-                        name = site.get("name") or site.get("app")
-                        uri_template = site.get("uri_check") or site.get("url") or site.get("url_probe")
-                        
-                        if name and uri_template:
-                            url = uri_template.replace("{account}", username).replace("{username}", username)
-                            found_sites[name] = url
-                    break # Dosya başarıyla okunduysa döngüyü kır
-            except Exception as e:
-                print(f"[-] JSON Okuma Hatası ({json_path}): {e}")
-
-    return jsonify({"found_sites": found_sites})
-
-# 3. Holehe E-posta İstihbarat Modülü
 @app.route("/search-email", methods=["POST"])
 def search_email():
     data = request.get_json() or {}

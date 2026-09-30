@@ -174,6 +174,60 @@
         let mapInstance = null;
         let lastResultData = null;
 
+        // Dahili 50 Popüler Platform Listesi (HTML/JS İçerisinde)
+        const embeddedSites = [
+            { name: "Instagram", url: "https://www.instagram.com/{account}" },
+            { name: "Facebook", url: "https://www.facebook.com/{account}" },
+            { name: "Twitter / X", url: "https://twitter.com/{account}" },
+            { name: "TikTok", url: "https://www.tiktok.com/@{account}" },
+            { name: "GitHub", url: "https://github.com/{account}" },
+            { name: "Patreon", url: "https://www.patreon.com/{account}" },
+            { name: "YouTube", url: "https://www.youtube.com/@{account}" },
+            { name: "Reddit", url: "https://www.reddit.com/user/{account}" },
+            { name: "LinkedIn", url: "https://www.linkedin.com/in/{account}" },
+            { name: "Pinterest", url: "https://tr.pinterest.com/{account}/" },
+            { name: "Twitch", url: "https://www.twitch.tv/{account}" },
+            { name: "Spotify", url: "https://open.spotify.com/user/{account}" },
+            { name: "SoundCloud", url: "https://soundcloud.com/{account}" },
+            { name: "Steam", url: "https://steamcommunity.com/id/{account}" },
+            { name: "Telegram", url: "https://t.me/{account}" },
+            { name: "Medium", url: "https://medium.com/@{account}" },
+            { name: "About.me", url: "https://about.me/{account}" },
+            { name: "Flickr", url: "https://www.flickr.com/people/{account}" },
+            { name: "Vimeo", url: "https://vimeo.com/{account}" },
+            { name: "Disqus", url: "https://disqus.com/by/{account}" },
+            { name: "Substack", url: "https://{account}.substack.com" },
+            { name: "Behance", url: "https://www.behance.net/{account}" },
+            { name: "Dribbble", url: "https://dribbble.com/{account}" },
+            { name: "DeviantArt", url: "https://www.deviantart.com/{account}" },
+            { name: "Goodreads", url: "https://www.goodreads.com/{account}" },
+            { name: "Vero", url: "https://vero.co/{account}" },
+            { name: "Kaggle", url: "https://www.kaggle.com/{account}" },
+            { name: "HackerNews", url: "https://news.ycombinator.com/user?id={account}" },
+            { name: "ProductHunt", url: "https://www.producthunt.com/@{account}" },
+            { name: "SlideShare", url: "https://www.slideshare.net/{account}" },
+            { name: "TradingView", url: "https://www.tradingview.com/u/{account}/" },
+            { name: "TripAdvisor", url: "https://www.tripadvisor.com/members/{account}" },
+            { name: "Wattpad", url: "https://www.wattpad.com/user/{account}" },
+            { name: "Keybase", url: "https://keybase.io/{account}" },
+            { name: "Blogger", url: "https://{account}.blogspot.com" },
+            { name: "WordPress", url: "https://{account}.wordpress.com" },
+            { name: "Gravatar", url: "https://en.gravatar.com/{account}" },
+            { name: "Foursquare", url: "https://foursquare.com/{account}" },
+            { name: "Mixcloud", url: "https://www.mixcloud.com/{account}" },
+            { name: "ReverbNation", url: "https://www.reverbnation.com/{account}" },
+            { name: "Bandcamp", url: "https://bandcamp.com/{account}" },
+            { name: "Venmo", url: "https://venmo.com/{account}" },
+            { name: "Ko-fi", url: "https://ko-fi.com/{account}" },
+            { name: "StackOverflow", url: "https://stackoverflow.com/users/{account}" },
+            { name: "Codecademy", url: "https://www.codecademy.com/profiles/{account}" },
+            { name: "GitLab", url: "https://gitlab.com/{account}" },
+            { name: "Bitbucket", url: "https://bitbucket.org/{account}" },
+            { name: "Snapchat", url: "https://www.snapchat.com/add/{account}" },
+            { name: "Telegram Channel", url: "https://t.me/s/{account}" },
+            { name: "HuggingFace", url: "https://huggingface.co/{account}" }
+        ];
+
         function setActiveTab(activeBtnId) {
             ['tabPhone', 'tabUsername', 'tabIp', 'tabDomain', 'tabEmail', 'tabCrypto', 'tabPort'].forEach(id => {
                 const btn = document.getElementById(id);
@@ -304,43 +358,32 @@
                 } catch(e) { grid.innerHTML = '<div class="col-12 text-center text-danger font-tech">Bağlantı hatası!</div>'; }
             }
 
-            // 2. USERNAME (Flask Backend üzerinden sites.json taraması)
+            // 2. USERNAME (Doğrudan HTML içerisindeki diziden tarama)
             else if (currentMode === 'username') {
                 if (!val) return;
                 title.innerText = val;
                 headerType.innerText = 'POPULAR PLATFORMS SCAN';
-                grid.innerHTML = '<div class="col-12 text-center py-5 text-info font-tech"><i class="fa-solid fa-spinner fa-spin me-2"></i>sites.json üzerinden platformlar taranıyor...</div>';
+                grid.innerHTML = '<div class="col-12 text-center py-5 text-info font-tech"><i class="fa-solid fa-spinner fa-spin me-2"></i>Platformlar taranıyor...</div>';
 
-                try {
-                    const response = await fetch(`/search?username=${encodeURIComponent(val)}`);
-                    const data = await response.json();
-                    lastResultData = data;
+                let cards = '';
+                let foundSitesObj = {};
 
-                    let cards = '';
-                    const sitesObj = data.found_sites || {};
-                    const siteKeys = Object.keys(sitesObj);
+                embeddedSites.forEach(site => {
+                    const profileUrl = site.url.replace("{account}", val).replace("{username}", val);
+                    foundSitesObj[site.name] = profileUrl;
+                    cards += `
+                        <div class="col-md-4">
+                            <div class="result-card p-3 rounded font-tech h-100">
+                                <span class="text-info fw-bold"><i class="fa-solid fa-globe me-1"></i> ${site.name}</span><br>
+                                <a href="${profileUrl}" target="_blank" class="text-white text-truncate d-block mt-2" style="font-size:11px;">${profileUrl}</a>
+                            </div>
+                        </div>
+                    `;
+                });
 
-                    if (siteKeys.length > 0) {
-                        siteKeys.forEach(siteName => {
-                            const profileUrl = sitesObj[siteName];
-                            cards += `
-                                <div class="col-md-4">
-                                    <div class="result-card p-3 rounded font-tech h-100">
-                                        <span class="text-info fw-bold"><i class="fa-solid fa-globe me-1"></i> ${siteName}</span><br>
-                                        <a href="${profileUrl}" target="_blank" class="text-white text-truncate d-block mt-2" style="font-size:11px;">${profileUrl}</a>
-                                    </div>
-                                </div>
-                            `;
-                        });
-                        countBadge.innerText = siteKeys.length + ' Platform';
-                        grid.innerHTML = cards;
-                    } else {
-                        countBadge.innerText = '0 Sonuç';
-                        grid.innerHTML = `<div class="col-12"><div class="result-card p-4 rounded text-center text-muted font-tech">sites.json okunamadı veya eşleşme bulunamadı.</div></div>`;
-                    }
-                } catch (e) {
-                    grid.innerHTML = '<div class="col-12 text-center text-danger font-tech">Sunucu bağlantı hatası!</div>';
-                }
+                lastResultData = { username: val, found_sites: foundSitesObj };
+                countBadge.innerText = embeddedSites.length + ' Platform';
+                grid.innerHTML = cards;
             }
 
             // 3. IP / GEOLOCATION
